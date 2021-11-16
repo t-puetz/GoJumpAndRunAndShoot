@@ -1,0 +1,33 @@
+{
+  "LevelPhysics": {},
+
+  "Entities" : {
+    "0": {
+      "Reference": "Welcome Screen Background",
+      "Components": [2, 5, 8],
+      "InitialPosX": 0,
+      "InitialPosY": 0
+    },
+
+    "1": {
+      "Reference": "Start Game",
+      "Components": [2, 5, 8],
+      "InitialPosX": 650,
+      "InitialPosY": 335
+    },
+
+    "2": {
+      "Reference": "Options Menu",
+      "Components": [2, 5, 8],
+      "InitialPosX": 650,
+      "InitialPosY": 385
+    },
+
+    "3": {
+      "Reference": "Exit Game",
+      "Components": [2, 5, 8],
+      "InitialPosX": 650,
+      "InitialPosY": 435
+    }
+  }
+}

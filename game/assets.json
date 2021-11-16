@@ -1,0 +1,78 @@
+{
+  "Welcome Screen Background": {
+    "AnimatedByDefault": false,
+    "ImagesBasePath": "./assets/",
+    "Image": "Full-Background.png",
+    "Text": ""
+  },
+
+  "Start Game": {
+    "AnimatedByDefault": false,
+    "ImageBasePath": "",
+    "Image": "",
+    "FontSize": 16,
+    "Text": "Start Game (S)"
+  },
+
+  "Options Menu": {
+    "AnimatedByDefault": false,
+    "ImageBasePath": "",
+    "Image": "",
+    "FontSize": 16,
+    "Text": "Options Menu (O)"
+  },
+
+  "Exit Game": {
+    "AnimatedByDefault": false,
+    "ImageBasePath": "",
+    "Image": "",
+    "FontSize": 16,
+    "Text": "Exit Game (E)"
+  },
+
+  "Player1": {
+    "AnimatedByDefault": true,
+    "ImagesBasePath": "./assets/Player/",
+    "DefaultAnimationDuration": 12,
+
+    "Animations": {
+      "Idle": {
+        "SpritesheetAvailable": false,
+        "NumberAnimations": 1,
+        "Image": "p1_stand.png"
+      },
+      "Jump": {
+        "SpritesheetAvailable": false,
+        "NumberAnimations": 1,
+        "Image": "p1_jump.png"
+      },
+      "Hurt": {
+        "SpritesheetAvailable": false,
+        "NumberAnimations": 1,
+        "Image": "p1_hurt.png"
+      },
+      "Front": {
+        "SpritesheetAvailable": false,
+        "NumberAnimations": 1,
+        "Image": "p1_front.png"
+      },
+      "Walk": {
+        "SpritesheetAvailable": true,
+        "Spritesheet": "p1_walk.png",
+        "NumberAnimations": 11
+      }
+    }
+  },
+
+  "Grass": {
+    "AnimatedByDefault": false,
+    "ImagesBasePath": "./assets/Tiles/",
+    "Image": "grass.png"
+  },
+
+  "Box": {
+    "AnimatedByDefault": false,
+    "ImagesBasePath": "./assets/Tiles/",
+    "Image": "box.png"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "LevelPhysics": {
+    "Gravity": 0.981
+  },
+
+  "Entities" : {
+    "0": {
+      "Reference": "Player1",
+      "Components": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "InitialPosX": 450,
+      "InitialPosY": 535
+    },
+
+    "1-20": {
+      "Reference": "Grass",
+      "Components": [1, 4, 5, 8],
+      "SpreadAlong": "X",
+      "InitialPosX": 0,
+      "InitialPosY": 635
+    },
+
+    "21": {
+      "Reference": "Box",
+      "Components": [1, 4, 5, 8],
+      "InitialPosX": 500,
+      "InitialPosY": 565
+    }
+  }
+}
