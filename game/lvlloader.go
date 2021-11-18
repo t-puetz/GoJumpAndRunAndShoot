@@ -104,35 +104,6 @@ func (l *LevelJSONConfig) GetFirstEntityIDFromRange(entityID uint64) int {
 	return -1
 }
 
-func CreateEntityComponentMap(pLvlConfig *LevelJSONConfig) *map[uint64][]uint16 {
-	lvlConfig := *pLvlConfig
-	pEntitiesConfig := lvlConfig.EntitiesDescriptions
-	entitiesConfig := *pEntitiesConfig
-
-	entityComponentMap := make(map[uint64][]uint16)
-
-	for key, _ := range entitiesConfig {
-		var numKeysUpperLimit uint64
-		var numKeysLowerLimit uint64
-
-		if strings.Contains(key, "-") {
-			// We have a range of Entities
-			numKeys := strings.Split(key, "-")
-			numKeysUpperLimit, _ = strconv.ParseUint(numKeys[1], 10, 64)
-			numKeysLowerLimit, _ = strconv.ParseUint(numKeys[0], 10, 64)
-
-			for i := numKeysLowerLimit; i <= numKeysUpperLimit; i++ {
-				entityComponentMap[i] = entitiesConfig[key].Components
-			}
-		} else {
-			// Single Entity
-			entityID, _ := strconv.Atoi(key)
-			entityComponentMap[uint64(entityID)] = entitiesConfig[key].Components
-		}
-	}
-	return &entityComponentMap
-}
-
 func CreateEntityComponentOrdered(pLvlConfig *LevelJSONConfig) *orderedmap.OrderedMap {
 	lvlConfig := *pLvlConfig
 	pEntitiesConfig := lvlConfig.EntitiesDescriptions
@@ -160,16 +131,6 @@ func CreateEntityComponentOrdered(pLvlConfig *LevelJSONConfig) *orderedmap.Order
 		}
 	}
 	return entityComponentMap
-}
-
-func CreateLvlsEntityAndComponents(Game *Game, EntCmpMap *map[uint64][]uint16) {
-	for entityID, components := range *(EntCmpMap) {
-		Game.ECSManager.InitializeComponentsForEntity(entityID)
-
-		for _, componentID := range components {
-			Game.ECSManager.AddComponentToEntity(entityID, componentID)
-		}
-	}
 }
 
 func CreateLvlsEntityAndComponentsOrdered(Game *Game, EntCmpMap *orderedmap.OrderedMap) {
@@ -236,11 +197,13 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 
 		for animationType, _ := range *mainEntity.Animations {
 			// TODO: Take care of ALL animation types
-			if animationType != "Front" {
+
+			imageName = (*mainEntity.Animations)[animationType].Image
+
+			if imageName == "" {
 				continue
 			}
 
-			imageName = (*mainEntity.Animations)[animationType].Image
 			fullImagePath = basePath + imageName
 
 			err := errors.New("")
@@ -260,9 +223,9 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 			// If we have multiple images for animations as in this case here
 			// the RenderComponentData as initial data gets the data of the first image
             // TODO: Take care of ALL animation types!
-			if imageCounter == 0 && animationType == "Front" {
+			if imageCounter == 0 {
 				pRCD.Path = fullImagePath
-				pRCD.Img = pImage
+				pRCD.Image = pImage
 				pRCD.Texture = pTexture
 			}
 
@@ -277,8 +240,6 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 			pACDCore.Images = append(pACDCore.Images, pImage)
 			pACDCore.Textures = append(pACDCore.Textures, pTexture)
 
-			pACDDataMap := make(map[string]*ecs.AnimationComponentDataCore)
-			pACD.AnimationData = &pACDDataMap
 			(*pACD.AnimationData)[animationType] = pACDCore
 
 			imageCounter += 1
@@ -307,7 +268,7 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 
 			pRCD.Path = fullImagePath
 			pRCD.Texture = pTexture
-			pRCD.Img = pImage
+			pRCD.Image = pImage
 		}
 
 		if mainEntity.Text != "" && mainEntity.FontSize > 0 {
@@ -345,50 +306,12 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 	}
 }
 
-func InitializeLevel(g *Game) {
-	entityComponentMap := CreateEntityComponentMap(g.LvlDescription)
-	CreateLvlsEntityAndComponents(g, entityComponentMap)
-	g.ECSManager.LinkComponentsWithProperDataStruct()
-	LoadImagesAndTextures(g)
-	TransformSystemSetInitialVals(g)
-}
-
 func InitializeLevelOrdered(g *Game) {
 	entityComponentMap := CreateEntityComponentOrdered(g.LvlDescription)
 	CreateLvlsEntityAndComponentsOrdered(g, entityComponentMap)
 	g.ECSManager.LinkComponentsWithProperDataStructOrdered()
 	LoadImagesAndTextures(g)
 	TransformSystemSetInitialValsOrdered(g)
-}
-
-func TransformSystemSetInitialVals(g *Game) {
-	// Get the entity config map keys that represent entity ranges
-	lvlConfig := g.LvlDescription
-
-	for entityID, components := range *g.ECSManager.EntityToComponentMap {
-        hasTransformComponent := g.ECSManager.HasNamedComponent(components, "TRANSFORM_COMPONENT")
-
-		if ! hasTransformComponent {
-			continue
-		}
-
-		pTCD := g.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*ecs.TransformComponentData)
-		entityJSONConfig := lvlConfig.GetEntityDescription(entityID)
-
-		if entityJSONConfig.SpreadAlong == "X" {
-			pRCD := g.ECSManager.GetComponentDataByName(entityID, "RENDER_COMPONENT").(*ecs.RenderComponentData)
-			firstEntity := lvlConfig.GetFirstEntityIDFromRange(entityID)
-			pTCD.Posy = float64(entityJSONConfig.InitialPosY)
-			pTCD.Posx = float64(entityJSONConfig.InitialPosX) + float64(pRCD.Img.W) * (float64(entityID) - float64(firstEntity))
-		} else {
-			pTCD.Posx = float64(entityJSONConfig.InitialPosX)
-			pTCD.Posy = float64(entityJSONConfig.InitialPosY)
-		}
-
-		pTCD.FlipImg = false
-		pTCD.IsJumping = false
-		pTCD.Hspeed = 0
-	}
 }
 
 func TransformSystemSetInitialValsOrdered(g *Game) {
@@ -409,7 +332,7 @@ func TransformSystemSetInitialValsOrdered(g *Game) {
 			pRCD := g.ECSManager.GetComponentDataByName(el.Key.(uint64), "RENDER_COMPONENT").(*ecs.RenderComponentData)
 			firstEntity := lvlConfig.GetFirstEntityIDFromRange(el.Key.(uint64))
 			pTCD.Posy = float64(entityJSONConfig.InitialPosY)
-			pTCD.Posx = float64(entityJSONConfig.InitialPosX) + float64(pRCD.Img.W) * (float64(el.Key.(uint64)) - float64(firstEntity))
+			pTCD.Posx = float64(entityJSONConfig.InitialPosX) + float64(pRCD.Image.W) * (float64(el.Key.(uint64)) - float64(firstEntity))
 		} else {
 			pTCD.Posx = float64(entityJSONConfig.InitialPosX)
 			pTCD.Posy = float64(entityJSONConfig.InitialPosY)

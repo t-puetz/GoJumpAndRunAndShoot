@@ -68,62 +68,6 @@ func (sys *CollideSystem) Run(delta float64, statemachine *statemachine.StateMac
 	}
 }
 
-
-
-/*func (sys *CollideSystem) RunUnordered(delta float64) {
-	ecsManager := sys.ECSManager
-	entityToComponentMap := ecsManager.EntityToComponentMap
-
-	for i, components := range *entityToComponentMap {
-
-		if ! sys.ECSManager.HasNamedComponent(components, "DYNAMIC_COMPONENT") {
-			continue
-		}
-
-		entityOneHasDynamicComponent := sys.ECSManager.HasNamedComponent(components, "DYNAMIC_COMPONENT")
-		lengthOfEntityComponentMap := uint64(len(*entityToComponentMap))
-
-		for j := i + 1; j < lengthOfEntityComponentMap; j++ {
-			componentsEntityTwo := (*entityToComponentMap)[j]
-
-			if ! sys.ECSManager.HasNamedComponent(componentsEntityTwo,"COLLIDE_COMPONENT") {
-				continue
-			}
-
-			entityTwoHasDynamicComponent := sys.ECSManager.HasNamedComponent(componentsEntityTwo, "DYNAMIC_COMPONENT")
-
-			ent1 := i
-			ent2 := j
-
-			if (!entityOneHasDynamicComponent) && (!entityTwoHasDynamicComponent) {
-				continue
-			}
-
-			pTCD1 := sys.ECSManager.GetComponentDataByName(ent1, "TRANSFORM_COMPONENT").(*TransformComponentData)
-			pTCD2 := sys.ECSManager.GetComponentDataByName(ent2, "TRANSFORM_COMPONENT").(*TransformComponentData)
-
-			collisionDirections := CollideSystemCoreDetectAABB(sys.ECSManager, ent1, ent2, pTCD1, pTCD2)
-
-			if collisionDirections == nil {
-				continue
-			}
-
-			sliceWithComponentData := make([]interface{}, 2, 2)
-			sliceWithComponentData[0] = pTCD1
-			sliceWithComponentData[1] = pTCD2
-
-			sliceOtherParametersUpdateComponent := make([]interface{}, 5, 5)
-			sliceOtherParametersUpdateComponent[0] = entityOneHasDynamicComponent
-			sliceOtherParametersUpdateComponent[1] = entityTwoHasDynamicComponent
-			sliceOtherParametersUpdateComponent[2] = collisionDirections
-			sliceOtherParametersUpdateComponent[3] = ent1
-			sliceOtherParametersUpdateComponent[4] = ent2
-
-			sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
-		}
-	}
-}*/
-
 func (sys *CollideSystem) CollideSystemCoreDetectAABB(ecsManager *ECSManager, ent1, ent2 uint64, pTCD1, pTCD2 *TransformComponentData) map[string]bool {
 	imgRectOne := ecsManager.GetEntityRect(ent1)
 	imgRectTwo := ecsManager.GetEntityRect(ent2)

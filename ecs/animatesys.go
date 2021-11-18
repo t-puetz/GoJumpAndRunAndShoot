@@ -71,46 +71,6 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 	}
 }
 
-/*
-func (sys *AnimateSystem) RunUnordered(delta float64) {
-	ecsManager := sys.ECSManager
-	entityToComponentMap := *ecsManager.EntityToComponentMap
-
-	for entityID, components := range entityToComponentMap {
-
-		if !ecsManager.HasComponent(components, sys.SystemID) {
-			continue
-		}
-
-		pACD := sys.GetComponentData(entityID).(*AnimateComponentData)
-
-		animationTypeMap := *pACD.AnimationData
-
-		for animationName, _ := range animationTypeMap {
-			pACDCore := animationTypeMap[animationName]
-
-			noAnimationNeeded := ((len(pACDCore.Images) <= 1 || len(pACDCore.Textures) <= 1) ||
-				(pACDCore.Images == nil || pACDCore.Textures == nil || pACDCore.Paths == nil))
-
-			if noAnimationNeeded {
-				continue
-			}
-
-			sliceWithComponentData := make([]interface{}, 2, 2)
-			sliceWithComponentData[0] = nil
-
-			sliceOtherParametersUpdateComponent := make([]interface{}, 4, 4)
-			sliceOtherParametersUpdateComponent[0] = animationName
-			sliceOtherParametersUpdateComponent[1] = animationTypeMap
-			sliceOtherParametersUpdateComponent[2] = entityID
-
-			sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
-		}
-	}
-}
-*/
-
-
 func (sys *AnimateSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
 	animationName := sliceOtherParametersUpdateComponent[0].(string)
 	animationTypeMap := sliceOtherParametersUpdateComponent[1].(map[string]*AnimationComponentDataCore)
@@ -134,12 +94,12 @@ func (sys *AnimateSystem) UpdateComponent(delta float64, sliceWithComponentData 
 
 			// TODO: Take care of ALL animation types
 
-			if pRCD.Img == pACDCore.Images[entityID] && entityIsMoving {
+			if pRCD.Image == pACDCore.Images[entityID] && entityIsMoving {
 				if k < len(pACDCore.Images)-1 && pACDCore.Images[k+1] != nil {
-					pRCD.Img = pACDCore.Images[k+1]
+					pRCD.Image = pACDCore.Images[k+1]
 					pRCD.Texture = pACDCore.Textures[k+1]
 				} else if k == len(pACDCore.Images)-1 || pACDCore.Images[k+1] == nil {
-					pRCD.Img = pACDCore.Images[0]
+					pRCD.Image = pACDCore.Images[0]
 					pRCD.Texture = pACDCore.Textures[0]
 				}
 			}

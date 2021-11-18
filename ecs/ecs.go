@@ -241,7 +241,7 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["TRANSFORM_COMPONENT"]:
 					cd.Data = &TransformComponentData{}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["RENDER_COMPONENT"]:
-					cd.Data = &RenderComponentData{Img: nil}
+					cd.Data = &RenderComponentData{}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["ANIMATE_COMPONENT"]:
 					cd.Data = &AnimateComponentData{AnimationData: nil}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["GRAVITY_COMPONENT"]:
@@ -274,16 +274,17 @@ func (e *ECSManager) LinkComponentsWithProperDataStructOrdered() {
 			keyForEntityComponentDataMap = entityIDStr + "-" + componentIDStr
 			cd := ComponentData{Data: nil}
 
-			// Only link data if entCmpDataMap map's val for that key is nil
+			// Only link data if entityComponentMap map's val for that key is nil
 			// Also only link data if a real component exists.
 			if keyForEntityComponentDataMap != "-" && j != 65535 {
 				switch uint16(j) {
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["TRANSFORM_COMPONENT"]:
 					cd.Data = &TransformComponentData{}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["RENDER_COMPONENT"]:
-					cd.Data = &RenderComponentData{Img: nil}
+					cd.Data = &RenderComponentData{}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["ANIMATE_COMPONENT"]:
-					cd.Data = &AnimateComponentData{AnimationData: nil}
+					acd := make(map[string]*AnimationComponentDataCore)
+					cd.Data = &AnimateComponentData{AnimationData: &acd}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["GRAVITY_COMPONENT"]:
 					cd.Data = &GravityComponentData{}
 				}
@@ -312,8 +313,8 @@ func (e *ECSManager) GetEntityRect(entityID uint64) *sdl.Rect {
 	pRCD := e.GetComponentDataByName(entityID, "RENDER_COMPONENT").(*RenderComponentData)
 	pTCD := e.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
 
-	h := pRCD.Img.H
-	w := pRCD.Img.W
+	h := pRCD.Image.H
+	w := pRCD.Image.W
 
 	return &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: w, H: h}
 }

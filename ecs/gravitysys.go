@@ -44,33 +44,6 @@ func (sys *GravitySystem) Run(delta float64, statemachine *statemachine.StateMac
 	}
 }
 
-/*func (sys *GravitySystem) Run(delta float64) {
-	const GRAVITY = 0.981
-	ecsManager := sys.ECSManager
-	entityToComponentMap := ecsManager.EntityToComponentMap
-
-	for entityID, components := range *entityToComponentMap {
-		entityHasGravityComponent := ecsManager.HasNamedComponent(components, "GRAVITY_COMPONENT")
-		entityHasTransformComponent := ecsManager.HasNamedComponent(components, "TRANSFORM_COMPONENT")
-
-		if ! entityHasGravityComponent || ! entityHasTransformComponent {
-			continue
-		}
-
-		pGCD := sys.GetComponentData(entityID).(*GravityComponentData)
-		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
-
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pGCD
-		sliceWithComponentData[1] = pTCD
-
-		sliceOtherParametersUpdateComponent := make([]interface{}, 1, 1)
-		sliceOtherParametersUpdateComponent[0] = GRAVITY
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
-	}
-}*/
-
 func (sys *GravitySystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
     pTCD := sliceWithComponentData[1].(*TransformComponentData)
 	GRAVITY := sliceOtherParametersUpdateComponent[0].(float64)

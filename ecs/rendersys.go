@@ -7,7 +7,7 @@ import (
 
 type RenderComponentData struct {
 	Path     string
-	Img      *sdl.Surface
+	Image    *sdl.Surface
 	Texture  *sdl.Texture
 	Text     *sdl.Surface
 	FontSize uint8
@@ -53,32 +53,6 @@ func (sys *RenderSystem) Run(delta float64, statemachine *statemachine.StateMach
 	sys.Renderer.Present()
 }
 
-/*func (sys *RenderSystem) Run(delta float64) {
-	ecsManager := sys.ECSManager
-	entityToComponentMap := ecsManager.EntityToComponentMap
-
-	sys.Renderer.Clear()
-
-	for entityID, components := range *entityToComponentMap {
-		log.Printf("%+v\n", entityID)
-		if !sys.ECSManager.HasComponent(components, sys.SystemID) {
-			continue
-		}
-
-		pRCD := sys.GetComponentData(entityID).(*RenderComponentData)
-		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
-
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pRCD
-		sliceWithComponentData[1] = pTCD
-
-		sliceOtherParametersUpdateComponent := make([]interface{}, 1, 1)
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
-	}
-	sys.Renderer.Present()
-}*/
-
 func (sys *RenderSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
 	pRCD := sliceWithComponentData[0].(*RenderComponentData)
 	pTCD := sliceWithComponentData[1].(*TransformComponentData)
@@ -90,8 +64,8 @@ func (sys *RenderSystem) UpdateComponent(delta float64, sliceWithComponentData [
 	var sdlFlip sdl.RendererFlip
 	texture := pRCD.Texture
 
-	if pRCD.Img != nil {
-		img = pRCD.Img
+	if pRCD.Image != nil {
+		img = pRCD.Image
 		h = img.H
 		w = img.W
 		dstRect = &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: w, H: h}

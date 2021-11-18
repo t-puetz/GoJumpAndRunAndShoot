@@ -44,26 +44,6 @@ func (sys *ActiveControlSystem) Run(delta float64, statemachine *statemachine.St
 	}
 }
 
-/*func (sys *ActiveControlSystem) RunUnordered(delta float64) {
-	ecsManager := sys.ECSManager
-	entityToComponentMap := *ecsManager.EntityToComponentMap
-
-	for entityID, components := range entityToComponentMap {
-
-		if ! ecsManager.HasNamedComponent(components, "ACTIVE_CONTROL_COMPONENT") {
-			continue
-		}
-
-		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT")
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pTCD
-
-		sliceOtherParametersUpdateComponent := make([]interface{}, 2, 2)
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
-	}
-}*/
-
 func (sys *ActiveControlSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
 	pTCD := sliceWithComponentData[0].(*TransformComponentData)
 	sm := sliceOtherParametersUpdateComponent[0].(*statemachine.StateMachine)

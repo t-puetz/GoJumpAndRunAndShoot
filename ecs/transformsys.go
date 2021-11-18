@@ -48,29 +48,6 @@ func (sys *TransformSystem) Run(delta float64, statemachine *statemachine.StateM
 	}
 }
 
-/*func (sys *TransformSystem) RunUnordered(delta float64) {
-	ecsManager := sys.ECSManager
-	entityToComponentMap := ecsManager.EntityToComponentMap
-
-	for entityID, components := range *entityToComponentMap {
-		entiyHasDynamicComponent := ecsManager.HasNamedComponent(components, "DYNAMIC_COMPONENT")
-		entiyHasTransformComponent := ecsManager.HasNamedComponent(components, "TRANSFORM_COMPONENT")
-
-		if ! entiyHasDynamicComponent || ! entiyHasTransformComponent {
-			continue
-		}
-
-		pTCD := sys.GetComponentData(entityID).(*TransformComponentData)
-
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pTCD
-
-		sliceOtherParametersUpdateComponent := make([]interface{}, 0, 0)
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
-	}
-}*/
-
 func (sys *TransformSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
 	pTCD := sliceWithComponentData[0].(*TransformComponentData)
 	pTCD.Posx += pTCD.Hspeed * delta

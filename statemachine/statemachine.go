@@ -85,17 +85,12 @@ func (sm *StateMachine) DoTransition(from, to State) bool {
 				case "WELCOME_SCREEN:EXIT":
 					log.Println(stateCase)
 					sm.CurrentState = toState
-					log.Println("State transition from", from, "to", sm.CurrentState)
 					sdl.Quit()
 					os.Exit(0)
 					return true
 				case "WELCOME_SCREEN:GAME":
 					log.Println(stateCase)
-					log.Printf("%v\n", *(&sm.CurrentState))
 					sm.CurrentState = toState
-					log.Printf("%v\n", *(&sm.CurrentState))
-					//os.Exit(1)
-					log.Println("State transition from", from, "to", sm.CurrentState)
 					return true
 				case "WELCOME_SCREEN:OPTIONS_MENU":
 					log.Println(stateCase)
@@ -104,12 +99,10 @@ func (sm *StateMachine) DoTransition(from, to State) bool {
 				case "GAME:PAUSE":
 					log.Println(stateCase)
 					sm.CurrentState = toState
-					log.Println("State transition from", from, "to", sm.CurrentState)
 					return true
 				case "PAUSE:GAME":
 					log.Println(stateCase)
 					sm.CurrentState = toState
-					log.Println("State transition from", from, "to", sm.CurrentState)
 					return true
 				}
 			}

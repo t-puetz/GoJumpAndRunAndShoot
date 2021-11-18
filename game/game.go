@@ -7,6 +7,7 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 	"log"
+	"os"
 	"time"
 )
 
@@ -70,14 +71,12 @@ func (g *Game) LoadFirstLevel() {
 	LoadAssetDescriptions(g)
 	LoadLvlConfig(g, "./game/lvlone.json")
 	InitializeLevelOrdered(g)
-	//InitializeLevel(g)
 }
 
 func (g *Game) LoadWelcomeScreen() {
 	LoadAssetDescriptions(g)
 	LoadLvlConfig(g, "./game/welcomescreen.json")
 	InitializeLevelOrdered(g)
-	//InitializeLevel(g)
 }
 
 func (g *Game) RunSystems(delta float64) {
@@ -88,20 +87,13 @@ func (g *Game) RunSystems(delta float64) {
 
 func (g *Game) RunWelcomeScreen(runWelcomeScreen bool) {
 	for runWelcomeScreen {
+		// Is decided in ActiveControlSystem by Pressing S:
 		if g.StateMachine.CurrentState == statemachine.GAME {
 			runWelcomeScreen = false
 		}
 
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch t := event.(type) {
-			case *sdl.QuitEvent:
-				println("Quit")
-				runWelcomeScreen = false
-				g.StateMachine.DoTransition(statemachine.WELCOME_SCREEN, statemachine.EXIT)
-			case *sdl.KeyboardEvent:
-				g.Keyboard.OnEvent(t)
-			}
-		}
+		g.runBasicQuitKeyboardEventLoop(runWelcomeScreen)
+
 		g.ECSManager.Systems[0].Run(1.0, g.StateMachine)
 		g.ECSManager.Systems[5].Run(1.0, g.StateMachine)
 
@@ -109,6 +101,49 @@ func (g *Game) RunWelcomeScreen(runWelcomeScreen bool) {
 	}
 }
 
+func (g *Game) renderGamePausedText() {
+	var font *ttf.Font
+	var text *sdl.Surface
+
+	font, _ = ttf.OpenFont("./assets/SourceCodePro-Bold.ttf", 32)
+	text, _ = font.RenderUTF8Blended("GAME PAUSED", sdl.Color{R: 255, G: 0, B: 0, A: 255})
+	_ = text.Blit(nil, g.Surface, &sdl.Rect{X: 684 - (text.W / 2), Y: 364 - (text.H / 2), W: 0, H: 0})
+	_ = g.Window.UpdateSurface()
+}
+
+func (g *Game) runBasicQuitKeyboardEventLoop(running bool) {
+	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		switch t := event.(type) {
+		case *sdl.QuitEvent:
+			println("Quit")
+			_ = g.Window.Destroy()
+			running = false
+			sdl.Quit()
+			os.Exit(0)
+		case *sdl.KeyboardEvent:
+			g.Keyboard.OnEvent(t)
+		}
+	}
+}
+
+func (g *Game) decideGameOrPauseState(delta float64) {
+	switch g.StateMachine.CurrentState {
+	case statemachine.PAUSE:
+		log.Println("Game Paused")
+		if g.Keyboard.KeyHeldDown(sdl.Keycode(27)) || g.Keyboard.KeyHeldDown(sdl.Keycode(1073741896)) {
+			g.StateMachine.DoTransition(statemachine.PAUSE, statemachine.GAME)
+			time.Sleep(time.Millisecond * 100)
+		}
+
+		g.renderGamePausedText()
+	case statemachine.GAME:
+		if g.Keyboard.KeyHeldDown(sdl.Keycode(1073741896)) {
+			g.StateMachine.DoTransition(statemachine.GAME, statemachine.PAUSE)
+			time.Sleep(time.Millisecond * 100)
+		}
+		g.RunSystems(delta)
+	}
+}
 
 func (g *Game) Run(running bool) {
 	var now time.Time
@@ -123,39 +158,10 @@ func (g *Game) Run(running bool) {
 		lastTime = now
 		delta := float64(elapsedTime.Milliseconds()) / timePerFrame
 
-		sdl.Delay(10)
 		g.Keyboard.ResetChangedStates()
+		g.runBasicQuitKeyboardEventLoop(running)
+		g.decideGameOrPauseState(delta)
 
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch t := event.(type) {
-			case *sdl.QuitEvent:
-				println("Quit")
-				running = false
-				break
-			case *sdl.KeyboardEvent:
-				g.Keyboard.OnEvent(t)
-			}
-		}
-
-		switch g.StateMachine.CurrentState {
-		case statemachine.PAUSE:
-			log.Println("Game Paused")
-			if g.Keyboard.KeyHeldDown(sdl.Keycode(27)) {
-				g.StateMachine.DoTransition(statemachine.PAUSE, statemachine.GAME)
-			}
-
-			var font *ttf.Font
-			var text *sdl.Surface
-
-			font, _ = ttf.OpenFont("./assets/SourceCodePro-Bold.ttf", 32)
-			text, _ = font.RenderUTF8Blended("GAME PAUSED", sdl.Color{R: 255, G: 0, B: 0, A: 255})
-			text.Blit(nil, g.Surface, &sdl.Rect{X: 684 - (text.W / 2), Y: 364 - (text.H / 2), W: 0, H: 0})
-			g.Window.UpdateSurface()
-		case statemachine.GAME:
-			if g.Keyboard.KeyHeldDown(sdl.Keycode(1073741896)) {
-				g.StateMachine.DoTransition(statemachine.GAME, statemachine.PAUSE)
-			}
-			g.RunSystems(delta)
-		}
+		sdl.Delay(10)
 	}
 }
