@@ -16,11 +16,11 @@ import (
 )
 
 type EntityJSONConfig struct {
-	Reference            string   `json:"Reference"`
-	Components           []uint16 `json:"Components"`
-	InitialPosX          int      `json:"InitialPosX"`
-	InitialPosY          int      `json:"InitialPosY"`
-	SpreadAlong          string   `json:"SpreadAlong"`
+	Reference   string   `json:"Reference"`
+	Components  []uint16 `json:"Components"`
+	InitialPosX int      `json:"InitialPosX"`
+	InitialPosY int      `json:"InitialPosY"`
+	SpreadAlong string   `json:"SpreadAlong"`
 }
 
 type LevelPhysics struct {
@@ -162,22 +162,26 @@ func LoadImagesAndTextures(Game *Game) {
 
 			for i := numKeysLowerLimit; i <= numKeysUpperLimit; i++ {
 				entityIDStr = strconv.Itoa(int(i))
-				assertImageDataRenderAndAnimationComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
+				connectStillImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
+				connectAnimatedImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
+				connectTextDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
 			}
 		} else {
-			assertImageDataRenderAndAnimationComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
+			connectStillImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
+			connectAnimatedImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
+			connectTextDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
 		}
 	}
 }
 
-func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr string, entityDescription *EntityJSONConfig, assetDescriptions *map[string]*AssetJSONConfig) {
+func connectAnimatedImageDataWithRenderAndAnimateComponentData(game *Game, entityIDStr string, entityDescription *EntityJSONConfig, assetDescriptions *map[string]*AssetJSONConfig) {
 	entityManager := game.ECSManager
 	entityID, _ := strconv.Atoi(entityIDStr)
 
 	reference := entityDescription.Reference
 
-	pRCD := entityManager.GetComponentDataByName(uint64(entityID),"RENDER_COMPONENT").(*ecs.RenderComponentData)
-	pACD := entityManager.GetComponentDataByName(uint64(entityID),"ANIMATE_COMPONENT").(*ecs.AnimateComponentData)
+	pRCD := entityManager.GetComponentDataByName(uint64(entityID), "RENDER_COMPONENT").(*ecs.RenderComponentData)
+	pACD := entityManager.GetComponentDataByName(uint64(entityID), "ANIMATE_COMPONENT").(*ecs.AnimateComponentData)
 
 	var fullImagePath string
 	var imageName string
@@ -222,7 +226,7 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 
 			// If we have multiple images for animations as in this case here
 			// the RenderComponentData as initial data gets the data of the first image
-            // TODO: Take care of ALL animation types!
+			// TODO: Take care of ALL animation types!
 			if imageCounter == 0 {
 				pRCD.Path = fullImagePath
 				pRCD.Image = pImage
@@ -244,13 +248,31 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 
 			imageCounter += 1
 		}
-	} else {
+	}
+}
+
+func connectStillImageDataWithRenderAndAnimateComponentData(game *Game, entityIDStr string, entityDescription *EntityJSONConfig, assetDescriptions *map[string]*AssetJSONConfig) {
+	entityManager := game.ECSManager
+	entityID, _ := strconv.Atoi(entityIDStr)
+
+	reference := entityDescription.Reference
+
+	pRCD := entityManager.GetComponentDataByName(uint64(entityID), "RENDER_COMPONENT").(*ecs.RenderComponentData)
+
+	var fullImagePath string
+	var imageName string
+	var pTexture *sdl.Texture
+	var pImage *sdl.Surface
+
+	mainEntity := (*assetDescriptions)[reference]
+	if !mainEntity.AnimatedByDefault {
 		// Non-animated assets
 
 		if mainEntity.Image != "" && mainEntity.ImagesBasePath != "" {
 			// Image assets
 
-			fullImagePath = mainEntity.ImagesBasePath + mainEntity.Image
+			imageName = mainEntity.Image
+			fullImagePath = mainEntity.ImagesBasePath + imageName
 
 			err := errors.New("")
 
@@ -270,48 +292,49 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 			pRCD.Texture = pTexture
 			pRCD.Image = pImage
 		}
-
-		if mainEntity.Text != "" && mainEntity.FontSize > 0 {
-			// Text assets
-
-			var textToRender string
-			var font *ttf.Font
-			var text *sdl.Surface
-			var err error
-
-			textToRender = mainEntity.Text
-
-			font, err = ttf.OpenFont("./assets/SourceCodePro-Bold.ttf", int(mainEntity.FontSize))
-
-			if err != nil {
-				panic("Error creating SDL font.")
-			}
-
-
-			text, err = font.RenderUTF8Blended(textToRender, sdl.Color{R: 255, G: 0, B: 0, A: 255})
-
-			if err != nil {
-				panic("Error creating SDL text.")
-			}
-
-			textTexture, err := game.Renderer.CreateTextureFromSurface(text)
-
-			if err != nil {
-				panic("Error creating text texture.")
-			}
-
-			pRCD.Text = text
-			pRCD.Texture = textTexture
-		}
 	}
 }
 
-func InitializeLevel(g *Game) {
-	entityComponentMap := CreateEntityComponent(g.LvlDescription)
-	CreateLvlsEntityAndComponents(g, entityComponentMap)
-	g.ECSManager.LinkComponentsWithProperDataStruct()
-	LoadImagesAndTextures(g)
-	TransformSystemSetInitialVals(g)
+func connectTextDataWithRenderAndAnimateComponentData(game *Game, entityIDStr string, entityDescription *EntityJSONConfig, assetDescriptions *map[string]*AssetJSONConfig) {
+	entityManager := game.ECSManager
+	entityID, _ := strconv.Atoi(entityIDStr)
+
+	reference := entityDescription.Reference
+
+	pRCD := entityManager.GetComponentDataByName(uint64(entityID), "RENDER_COMPONENT").(*ecs.RenderComponentData)
+	mainEntity := (*assetDescriptions)[reference]
+
+	if mainEntity.Text != "" && mainEntity.FontSize > 0 {
+		// Text assets
+
+		var textToRender string
+		var font *ttf.Font
+		var text *sdl.Surface
+		var err error
+
+		textToRender = mainEntity.Text
+
+		font, err = ttf.OpenFont("./assets/SourceCodePro-Bold.ttf", int(mainEntity.FontSize))
+
+		if err != nil {
+			panic("Error creating SDL font.")
+		}
+
+		text, err = font.RenderUTF8Blended(textToRender, sdl.Color{R: 255, G: 0, B: 0, A: 255})
+
+		if err != nil {
+			panic("Error creating SDL text.")
+		}
+
+		textTexture, err := game.Renderer.CreateTextureFromSurface(text)
+
+		if err != nil {
+			panic("Error creating text texture.")
+		}
+
+		pRCD.Text = text
+		pRCD.Texture = textTexture
+	}
 }
 
 func TransformSystemSetInitialVals(g *Game) {
@@ -321,7 +344,7 @@ func TransformSystemSetInitialVals(g *Game) {
 	for el := g.ECSManager.EntityToComponentMap.Front(); el != nil; el = el.Next() {
 		hasTransformComponent := g.ECSManager.HasNamedComponent(el.Value.([]uint16), "TRANSFORM_COMPONENT")
 
-		if ! hasTransformComponent {
+		if !hasTransformComponent {
 			continue
 		}
 
@@ -332,7 +355,7 @@ func TransformSystemSetInitialVals(g *Game) {
 			pRCD := g.ECSManager.GetComponentDataByName(el.Key.(uint64), "RENDER_COMPONENT").(*ecs.RenderComponentData)
 			firstEntity := lvlConfig.GetFirstEntityIDFromRange(el.Key.(uint64))
 			pTCD.Posy = float64(entityJSONConfig.InitialPosY)
-			pTCD.Posx = float64(entityJSONConfig.InitialPosX) + float64(pRCD.Image.W) * (float64(el.Key.(uint64)) - float64(firstEntity))
+			pTCD.Posx = float64(entityJSONConfig.InitialPosX) + float64(pRCD.Image.W)*(float64(el.Key.(uint64))-float64(firstEntity))
 		} else {
 			pTCD.Posx = float64(entityJSONConfig.InitialPosX)
 			pTCD.Posy = float64(entityJSONConfig.InitialPosY)
@@ -343,4 +366,12 @@ func TransformSystemSetInitialVals(g *Game) {
 		pTCD.Hspeed = 0
 
 	}
+}
+
+func InitializeLevel(g *Game) {
+	entityComponentMap := CreateEntityComponent(g.LvlDescription)
+	CreateLvlsEntityAndComponents(g, entityComponentMap)
+	g.ECSManager.LinkComponentsWithProperDataStruct()
+	LoadImagesAndTextures(g)
+	TransformSystemSetInitialVals(g)
 }
