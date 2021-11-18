@@ -14,7 +14,7 @@ func NewCollideSystem(e *ECSManager) *CollideSystem {
 
 func (sys *CollideSystem) Run(delta float64, statemachine *statemachine.StateMachine) {
 	ecsManager := sys.ECSManager
-	entityToComponentMapOrdered := ecsManager.EntityToComponentMapOrdered
+	entityToComponentMapOrdered := ecsManager.EntityToComponentMap
 
 	for el := entityToComponentMapOrdered.Front(); el != nil; el = el.Next() {
 	    components := el.Value.([]uint16)

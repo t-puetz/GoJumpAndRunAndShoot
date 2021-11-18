@@ -108,8 +108,7 @@ type ComponentData struct {
 }
 
 type ECSManager struct {
-	EntityToComponentMap                    *map[uint64][]uint16
-	EntityToComponentMapOrdered             *orderedmap.OrderedMap
+	EntityToComponentMap                    *orderedmap.OrderedMap
 	EntityComponentStringToComponentDataMap *map[string]*ComponentData
 	ComponentIDStorage                      *ComponentIDStorage
 	ComponentData                           *ComponentData
@@ -117,12 +116,10 @@ type ECSManager struct {
 }
 
 func NewECSManager() *ECSManager {
-	entityToComponentMap := make(map[uint64][]uint16)
 	entityComponentStringToComponentDataMap := make(map[string]*ComponentData)
 
 	ecsManager := ECSManager {
-		EntityToComponentMap: &entityToComponentMap,
-		EntityToComponentMapOrdered: orderedmap.NewOrderedMap(),
+		EntityToComponentMap: orderedmap.NewOrderedMap(),
 		EntityComponentStringToComponentDataMap: &entityComponentStringToComponentDataMap,
 		ComponentIDStorage: NewComponentIDStorage(),
 		ComponentData: nil,
@@ -166,27 +163,10 @@ func (e *ECSManager) GetEntityComponentKey(entityID uint64, componentName string
 func (e *ECSManager) HasNamedComponent(components []uint16, componentName string) bool {
 	return e.HasComponent(components, e.GetComponentID(componentName))
 }
+
 func (e *ECSManager) InitializeComponentsForEntity(entityID uint64) {
 	componentNameToIDMap := e.ComponentIDStorage.ComponentNameToIDMap
-	entityToComponentMap := *e.EntityToComponentMap
-	CURRENT_MAX_COMPONENTS := len(*componentNameToIDMap)
-
-	if entityToComponentMap[entityID] == nil {
-		// This is the first time we add a Component to the Entity since length
-		// of the value component slice is 0
-		entityToComponentMap[entityID] = make([]uint16, CURRENT_MAX_COMPONENTS, CURRENT_MAX_COMPONENTS)
-
-		// Only initialize components to "NULL" values once
-		for i := uint16(0); i < uint16(CURRENT_MAX_COMPONENTS); i++ {
-			// 65535 means NO COMPONENT, our artificial NULL VALUE for components
-			entityToComponentMap[entityID][i] = 65535
-		}
-	}
-}
-
-func (e *ECSManager) InitializeComponentsForEntityOrdered(entityID uint64) {
-	componentNameToIDMap := e.ComponentIDStorage.ComponentNameToIDMap
-	entityToComponentMapOrdered := *e.EntityToComponentMapOrdered
+	entityToComponentMapOrdered := *e.EntityToComponentMap
 	CURRENT_MAX_COMPONENTS := len(*componentNameToIDMap)
 	componentMap, _ := entityToComponentMapOrdered.Get(entityID)
 
@@ -205,11 +185,6 @@ func (e *ECSManager) InitializeComponentsForEntityOrdered(entityID uint64) {
 
 func (e *ECSManager) AddComponentToEntity(entityID uint64, componentID uint16) {
 	entityComponentStringToComponentDataMap := e.EntityToComponentMap
-	(*entityComponentStringToComponentDataMap)[entityID][componentID] = componentID
-}
-
-func (e *ECSManager) AddComponentToEntityOrdered(entityID uint64, componentID uint16) {
-	entityComponentStringToComponentDataMap := e.EntityToComponentMapOrdered
 	componentMap, _ := entityComponentStringToComponentDataMap.Get(entityID)
 	componentMap.([]uint16)[componentID] = componentID
 }
@@ -217,45 +192,6 @@ func (e *ECSManager) AddComponentToEntityOrdered(entityID uint64, componentID ui
 func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 	entityComponentStringToComponentDataMap := *e.EntityComponentStringToComponentDataMap
 	entityToComponentMap := *e.EntityToComponentMap
-
-	curNumEntities := uint64(len(entityToComponentMap))
-
-	for i := uint64(0); i < curNumEntities; i++ {
-		entityIDStr := strconv.Itoa(int(i))
-
-		var componentIDStr string
-		var keyForEntityComponentDataMap string
-
-		for j, _ := range entityToComponentMap[i] {
-			if j != 65535 {
-				componentIDStr = strconv.Itoa(j)
-			}
-
-			keyForEntityComponentDataMap = entityIDStr + "-" + componentIDStr
-			cd := ComponentData{Data: nil}
-
-			// Only link data if entCmpDataMap map's val for that key is nil
-			// Also only link data if a real component exists.
-			if keyForEntityComponentDataMap != "-" && j != 65535 {
-				switch uint16(j) {
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["TRANSFORM_COMPONENT"]:
-					cd.Data = &TransformComponentData{}
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["RENDER_COMPONENT"]:
-					cd.Data = &RenderComponentData{}
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["ANIMATE_COMPONENT"]:
-					cd.Data = &AnimateComponentData{AnimationData: nil}
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["GRAVITY_COMPONENT"]:
-					cd.Data = &GravityComponentData{}
-				}
-			}
-			entityComponentStringToComponentDataMap[keyForEntityComponentDataMap] = &cd
-		}
-	}
-}
-
-func (e *ECSManager) LinkComponentsWithProperDataStructOrdered() {
-	entityComponentStringToComponentDataMap := *e.EntityComponentStringToComponentDataMap
-	entityToComponentMap := *e.EntityToComponentMapOrdered
 
 	curNumEntities := uint64(entityToComponentMap.Len())
 

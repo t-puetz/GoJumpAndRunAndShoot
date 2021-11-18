@@ -104,7 +104,7 @@ func (l *LevelJSONConfig) GetFirstEntityIDFromRange(entityID uint64) int {
 	return -1
 }
 
-func CreateEntityComponentOrdered(pLvlConfig *LevelJSONConfig) *orderedmap.OrderedMap {
+func CreateEntityComponent(pLvlConfig *LevelJSONConfig) *orderedmap.OrderedMap {
 	lvlConfig := *pLvlConfig
 	pEntitiesConfig := lvlConfig.EntitiesDescriptions
 	entitiesConfig := *pEntitiesConfig
@@ -133,13 +133,13 @@ func CreateEntityComponentOrdered(pLvlConfig *LevelJSONConfig) *orderedmap.Order
 	return entityComponentMap
 }
 
-func CreateLvlsEntityAndComponentsOrdered(Game *Game, EntCmpMap *orderedmap.OrderedMap) {
+func CreateLvlsEntityAndComponents(Game *Game, EntCmpMap *orderedmap.OrderedMap) {
 	for el := EntCmpMap.Front(); el != nil; el = el.Next() {
 		{
-			Game.ECSManager.InitializeComponentsForEntityOrdered(el.Key.(uint64))
+			Game.ECSManager.InitializeComponentsForEntity(el.Key.(uint64))
 
 			for _, componentID := range el.Value.([]uint16) {
-				Game.ECSManager.AddComponentToEntityOrdered(el.Key.(uint64), componentID)
+				Game.ECSManager.AddComponentToEntity(el.Key.(uint64), componentID)
 			}
 		}
 	}
@@ -306,19 +306,19 @@ func assertImageDataRenderAndAnimationComponentData(game *Game, entityIDStr stri
 	}
 }
 
-func InitializeLevelOrdered(g *Game) {
-	entityComponentMap := CreateEntityComponentOrdered(g.LvlDescription)
-	CreateLvlsEntityAndComponentsOrdered(g, entityComponentMap)
-	g.ECSManager.LinkComponentsWithProperDataStructOrdered()
+func InitializeLevel(g *Game) {
+	entityComponentMap := CreateEntityComponent(g.LvlDescription)
+	CreateLvlsEntityAndComponents(g, entityComponentMap)
+	g.ECSManager.LinkComponentsWithProperDataStruct()
 	LoadImagesAndTextures(g)
-	TransformSystemSetInitialValsOrdered(g)
+	TransformSystemSetInitialVals(g)
 }
 
-func TransformSystemSetInitialValsOrdered(g *Game) {
+func TransformSystemSetInitialVals(g *Game) {
 	// Get the entity config map keys that represent entity ranges
 	lvlConfig := g.LvlDescription
 
-	for el := g.ECSManager.EntityToComponentMapOrdered.Front(); el != nil; el = el.Next() {
+	for el := g.ECSManager.EntityToComponentMap.Front(); el != nil; el = el.Next() {
 		hasTransformComponent := g.ECSManager.HasNamedComponent(el.Value.([]uint16), "TRANSFORM_COMPONENT")
 
 		if ! hasTransformComponent {
@@ -341,5 +341,6 @@ func TransformSystemSetInitialValsOrdered(g *Game) {
 		pTCD.FlipImg = false
 		pTCD.IsJumping = false
 		pTCD.Hspeed = 0
+
 	}
 }

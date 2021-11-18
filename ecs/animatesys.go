@@ -3,6 +3,7 @@ package ecs
 import (
 	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
+	"log"
 )
 
 type AnimationComponentDataCore struct {
@@ -34,7 +35,7 @@ func NewAnimateSystem(e *ECSManager) *AnimateSystem {
 
 func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMachine) {
 	ecsManager := sys.ECSManager
-	entityToComponentMapOrdered := *ecsManager.EntityToComponentMapOrdered
+	entityToComponentMapOrdered := *ecsManager.EntityToComponentMap
 
 	for el := entityToComponentMapOrdered.Front(); el != nil; el = el.Next() {
 		components := el.Value.([]uint16)
@@ -44,66 +45,63 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 			continue
 		}
 
+		if !sys.ECSManager.HasNamedComponent(components, "RENDER_COMPONENT") {
+			continue
+		}
+
+		if !sys.ECSManager.HasNamedComponent(components, "TRANSFORM_COMPONENT") {
+			continue
+		}
+
 		pACD := sys.GetComponentData(entityID).(*AnimateComponentData)
+		pRCD := sys.ECSManager.GetComponentDataByName(entityID, "RENDER_COMPONENT").(*RenderComponentData)
+		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
 
 		animationTypeMap := *pACD.AnimationData
 
-		for animationName, _ := range animationTypeMap {
-			pACDCore := animationTypeMap[animationName]
+		var animationName string
 
-			noAnimationNeeded := ((len(pACDCore.Images) <= 1 || len(pACDCore.Textures) <= 1) ||
-				(pACDCore.Images == nil || pACDCore.Textures == nil || pACDCore.Paths == nil))
-
-			if noAnimationNeeded {
-				continue
-			}
-
-			sliceWithComponentData := make([]interface{}, 2, 2)
-			sliceWithComponentData[0] = nil
-
-			sliceOtherParametersUpdateComponent := make([]interface{}, 4, 4)
-			sliceOtherParametersUpdateComponent[0] = animationName
-			sliceOtherParametersUpdateComponent[1] = animationTypeMap
-			sliceOtherParametersUpdateComponent[2] = entityID
-
-			sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
+		if pTCD.IsNotMoving {
+			animationName = "Idle"
+		} else {
+			animationName = "Front"
 		}
+
+		if pTCD.IsJumping {
+			animationName = "Jump"
+		}
+
+		pACDCore := animationTypeMap[animationName]
+
+		log.Println(animationName)
+
+		noAnimationNeeded := ((len(pACDCore.Images) <= 1 || len(pACDCore.Textures) <= 1) ||
+			(pACDCore.Images == nil || pACDCore.Textures == nil || pACDCore.Paths == nil))
+
+		if noAnimationNeeded {
+			continue
+		}
+
+		sliceWithComponentData := make([]interface{}, 2, 2)
+		sliceWithComponentData[0] = pRCD
+		sliceWithComponentData[1] = pACDCore
+
+		sliceOtherParametersUpdateComponent := make([]interface{}, 1, 1)
+		sliceOtherParametersUpdateComponent[0] = entityID
+
+		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
+
 	}
 }
 
 func (sys *AnimateSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
-	animationName := sliceOtherParametersUpdateComponent[0].(string)
-	animationTypeMap := sliceOtherParametersUpdateComponent[1].(map[string]*AnimationComponentDataCore)
-	entityID := sliceOtherParametersUpdateComponent[2].(uint64)
-	pACDCore := animationTypeMap[animationName]
+	//pRCD := sliceWithComponentData[0].(*RenderComponentData)
+	//pACDCore := sliceWithComponentData[2].(*AnimationComponentDataCore)
 
-	if pACDCore.AnimationDuration > 0 && pACDCore.CurrentFrame%pACDCore.AnimationDuration == 0 {
-		// Get the RenderComponentData to find out what the current drawn image is
-		// and set it to the next image needed for a cyclic animation for the next
-		// rendering iteration to present the correct animation image to the screen
-		pRCD := sys.GetComponentData(entityID).(*RenderComponentData)
-		pTCD := sys.GetComponentData(entityID).(*TransformComponentData)
+	//entityID := sliceOtherParametersUpdateComponent[0].(uint64)
 
-		entityIsMoving := pTCD.Hspeed != 0
+	//animationDuration := pACDCore.AnimationDuration
+	//currentFrame := pACDCore.CurrentFrame
 
-		for k, _ := range pACDCore.Images {
-			if pACDCore.Images[k] == nil || pACDCore.Paths[k] == "" {
-				// We are at an index where there is no image assigned
-				continue
-			}
 
-			// TODO: Take care of ALL animation types
-
-			if pRCD.Image == pACDCore.Images[entityID] && entityIsMoving {
-				if k < len(pACDCore.Images)-1 && pACDCore.Images[k+1] != nil {
-					pRCD.Image = pACDCore.Images[k+1]
-					pRCD.Texture = pACDCore.Textures[k+1]
-				} else if k == len(pACDCore.Images)-1 || pACDCore.Images[k+1] == nil {
-					pRCD.Image = pACDCore.Images[0]
-					pRCD.Texture = pACDCore.Textures[0]
-				}
-			}
-			pACDCore.CurrentFrame++
-		}
-	}
 }

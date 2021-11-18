@@ -17,7 +17,7 @@ func NewGravitySystem(e *ECSManager) *GravitySystem {
 func (sys *GravitySystem) Run(delta float64, statemachine *statemachine.StateMachine) {
 	const GRAVITY = 0.981
 	ecsManager := sys.ECSManager
-	entityToComponentMapOrdered := ecsManager.EntityToComponentMapOrdered
+	entityToComponentMapOrdered := ecsManager.EntityToComponentMap
 
 	for el := entityToComponentMapOrdered.Front(); el != nil; el = el.Next() {
 		components := el.Value.([]uint16)

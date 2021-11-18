@@ -27,7 +27,7 @@ func NewRenderSystem(e *ECSManager, renderer *sdl.Renderer) *RenderSystem {
 
 func (sys *RenderSystem) Run(delta float64, statemachine *statemachine.StateMachine) {
 	ecsManager := sys.ECSManager
-	entityToComponentMapOrdered := ecsManager.EntityToComponentMapOrdered
+	entityToComponentMapOrdered := ecsManager.EntityToComponentMap
 
 	sys.Renderer.Clear()
 

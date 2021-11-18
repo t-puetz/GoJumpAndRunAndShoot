@@ -70,13 +70,13 @@ func (g *Game) InitializeSDL() {
 func (g *Game) LoadFirstLevel() {
 	LoadAssetDescriptions(g)
 	LoadLvlConfig(g, "./game/lvlone.json")
-	InitializeLevelOrdered(g)
+	InitializeLevel(g)
 }
 
 func (g *Game) LoadWelcomeScreen() {
 	LoadAssetDescriptions(g)
 	LoadLvlConfig(g, "./game/welcomescreen.json")
-	InitializeLevelOrdered(g)
+	InitializeLevel(g)
 }
 
 func (g *Game) RunSystems(delta float64) {

@@ -23,7 +23,7 @@ func NewActiveControlSystem(e *ECSManager, k *input.Keyboard) *ActiveControlSyst
 
 func (sys *ActiveControlSystem) Run(delta float64, statemachine *statemachine.StateMachine) {
 	ecsManager := sys.ECSManager
-	entityToComponentMapOrdered := *ecsManager.EntityToComponentMapOrdered
+	entityToComponentMapOrdered := *ecsManager.EntityToComponentMap
 
 	for el := entityToComponentMapOrdered.Front(); el != nil; el = el.Next() {
 		components := el.Value.([]uint16)
@@ -78,10 +78,13 @@ func (sys *ActiveControlSystem) UpdateComponent(delta float64, sliceWithComponen
 			pTCD.Vspeed = 31.0
 		}
 
-		playerStoppedMoving := !sys.Keyboard.KeyHeldDown(sdl.Keycode('d')) && !sys.Keyboard.KeyHeldDown(sdl.Keycode('a'))
+		entityStoppedMoving := !sys.Keyboard.KeyHeldDown(sdl.Keycode('d')) && !sys.Keyboard.KeyHeldDown(sdl.Keycode('a'))
 
-		if playerStoppedMoving {
+		if entityStoppedMoving {
 			pTCD.Hspeed = 0
+			pTCD.IsNotMoving = true
+		} else {
+			pTCD.IsNotMoving = false
 		}
 	}
 }

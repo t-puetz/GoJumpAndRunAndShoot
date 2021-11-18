@@ -8,8 +8,8 @@ type TransformComponentData struct {
 	FlipImg       bool
 	Hspeed        float64
 	Vspeed        float64
-	MaxJumpHeight float64
 	IsJumping     bool
+	IsNotMoving   bool
 }
 
 type TransformSystem struct {
@@ -24,7 +24,7 @@ func NewTransformSystem(e *ECSManager) *TransformSystem {
 
 func (sys *TransformSystem) Run(delta float64, statemachine *statemachine.StateMachine) {
 	ecsManager := sys.ECSManager
-	entityToComponentMapOrdered := ecsManager.EntityToComponentMapOrdered
+	entityToComponentMapOrdered := ecsManager.EntityToComponentMap
 
 	for el := entityToComponentMapOrdered.Front(); el != nil; el = el.Next() {
 		entityID := el.Key.(uint64)
