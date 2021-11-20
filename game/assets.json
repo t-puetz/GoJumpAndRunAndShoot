@@ -57,9 +57,9 @@
         "Image": "p1_front.png"
       },
       "Walk": {
-        "SpritesheetAvailable": true,
-        "Spritesheet": "p1_walk.png",
-        "NumberAnimations": 11
+        "SpritesheetAvailable": false,
+        "NumberAnimations": 11,
+        "Image": "p1_walk/PNG/p1_walk01|01till11|p1walk11.png"
       }
     }
   },

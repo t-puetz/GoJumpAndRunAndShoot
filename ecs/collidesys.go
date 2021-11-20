@@ -115,17 +115,22 @@ func (sys *CollideSystem) UpdateComponent(delta float64, sliceWithComponentData 
 	if entityOneHasDynamicComponent {
 		if collisionDirections["right"] {
 			pTCD1.Posx -= float64(imgRectOne.X + imgRectOne.W - imgRectTwo.X)
+			pTCD1.IsNotMoving = true
+			pTCD1.IsJumping = false
 		} else if collisionDirections["left"] {
 			pTCD1.Posx += float64(imgRectTwo.X + imgRectTwo.W - imgRectOne.X)
+			pTCD1.IsNotMoving = true
+			pTCD1.IsJumping = false
 		}
 
 		if collisionDirections["bottom"] {
 			pTCD1.Posy -= float64(imgRectOne.Y + imgRectOne.H - imgRectTwo.Y)
-			pTCD1.IsJumping = false
 			pTCD1.Vspeed = 0
+			pTCD1.IsNotMoving = true
+			pTCD1.IsJumping = false
 		} else if collisionDirections["top"] {
 			pTCD1.Posy += float64(imgRectTwo.Y + imgRectTwo.H - imgRectOne.Y)
-			pTCD1.IsJumping = false
+			//pTCD1.IsJumping = false
 			pTCD1.Vspeed = 0
 		}
 	}

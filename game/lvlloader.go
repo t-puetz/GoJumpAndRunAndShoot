@@ -183,6 +183,10 @@ func connectAnimatedImageDataWithRenderAndAnimateComponentData(game *Game, entit
 	pRCD := entityManager.GetComponentDataByName(uint64(entityID), "RENDER_COMPONENT").(*ecs.RenderComponentData)
 	pACD := entityManager.GetComponentDataByName(uint64(entityID), "ANIMATE_COMPONENT").(*ecs.AnimateComponentData)
 
+	if pRCD.Text != nil {
+		return
+	}
+
 	var fullImagePath string
 	var imageName string
 	var pTexture *sdl.Texture
@@ -192,12 +196,6 @@ func connectAnimatedImageDataWithRenderAndAnimateComponentData(game *Game, entit
 
 	if mainEntity.AnimatedByDefault {
 		basePath := mainEntity.ImagesBasePath
-
-		if pRCD.Text != nil {
-			return
-		}
-
-		imageCounter := 0
 
 		for animationType, _ := range *mainEntity.Animations {
 			// TODO: Take care of ALL animation types
@@ -209,46 +207,119 @@ func connectAnimatedImageDataWithRenderAndAnimateComponentData(game *Game, entit
 			}
 
 			fullImagePath = basePath + imageName
+			pACDCore := &ecs.AnimationComponentDataCore{}
+			pACDCore.Paths = make([]string, 0, 0)
+			pACDCore.Images = make([]*sdl.Surface, 0, 0)
+			pACDCore.Textures = make([]*sdl.Texture, 0, 0)
 
+			imagePathsWhenRange, moreThanOneImage := connectAnimatedImageDataWithRenderAndAnimateComponentUnwrapImageRange(fullImagePath)
+			var imagesWhenRange []*sdl.Surface
+			var texturesWhenRange []*sdl.Texture
 			err := errors.New("")
 
-			pImage, err = img.Load(fullImagePath)
+			if moreThanOneImage {
+				for i := 0; i < len(imagePathsWhenRange); i++ {
+					if i == 0 {
+						imagesWhenRange = make([]*sdl.Surface, len(imagePathsWhenRange), len(imagePathsWhenRange))
+					}
 
-			if err != nil {
-				log.Fatalf("Not able to create image for RenderComponent of Entity number %s\n", entityIDStr)
-			}
+					pImage, err = img.Load(imagePathsWhenRange[i])
 
-			pTexture, err = game.Renderer.CreateTextureFromSurface(pImage)
+					if err != nil {
+						log.Fatalf("Not able to create image for RenderComponent of Entity number %s\n", entityIDStr)
+					}
 
-			if err != nil {
-				log.Fatalf("Not able to create texture from surface for RenderComponent of Entity number %s\n", entityIDStr)
-			}
+					imagesWhenRange[i] = pImage
 
-			// If we have multiple images for animations as in this case here
-			// the RenderComponentData as initial data gets the data of the first image
-			// TODO: Take care of ALL animation types!
-			if imageCounter == 0 {
+					if i == 0 {
+						texturesWhenRange = make([]*sdl.Texture, len(imagePathsWhenRange), len(imagePathsWhenRange))
+					}
+
+					pTexture, err = game.Renderer.CreateTextureFromSurface(imagesWhenRange[i])
+
+					if err != nil {
+						log.Fatalf("Not able to create texture from surface for RenderComponent of Entity number %s\n", entityIDStr)
+					}
+
+					texturesWhenRange[i] = pTexture
+				}
+
+				pRCD.Path = imagePathsWhenRange[0]
+				pRCD.Image = imagesWhenRange[0]
+				pRCD.Texture = texturesWhenRange[0]
+
+				pACDCore.Paths = append(pACDCore.Paths, imagePathsWhenRange...)
+				pACDCore.Images = append(pACDCore.Images, imagesWhenRange...)
+				pACDCore.Textures = append(pACDCore.Textures, texturesWhenRange...)
+			} else {
+				pImage, err = img.Load(fullImagePath)
+
+				if err != nil {
+					log.Fatalf("Not able to create image for RenderComponent of Entity number %s\n", entityIDStr)
+				}
+
+				pTexture, err = game.Renderer.CreateTextureFromSurface(pImage)
+
+				if err != nil {
+					log.Fatalf("Not able to create texture from surface for RenderComponent of Entity number %s\n", entityIDStr)
+				}
+
 				pRCD.Path = fullImagePath
 				pRCD.Image = pImage
 				pRCD.Texture = pTexture
+
+				pACDCore.Paths = append(pACDCore.Paths, fullImagePath)
+				pACDCore.Images = append(pACDCore.Images, pImage)
+				pACDCore.Textures = append(pACDCore.Textures, pTexture)
 			}
 
-			// The AnimationComponentData gets everything
-			pACDCore := &ecs.AnimationComponentDataCore{}
-
-			pACDCore.Paths = make([]string, 0, 4)
-			pACDCore.Images = make([]*sdl.Surface, 0, 4)
-			pACDCore.Textures = make([]*sdl.Texture, 0, 4)
-
-			pACDCore.Paths = append(pACDCore.Paths, fullImagePath)
-			pACDCore.Images = append(pACDCore.Images, pImage)
-			pACDCore.Textures = append(pACDCore.Textures, pTexture)
+			pACDCore.NumberAnimations = (*mainEntity.Animations)[animationType].NumberAnimations
+			pACDCore.DefaultAnimationDuration = mainEntity.DefaultAnimationDuration
 
 			(*pACD.AnimationData)[animationType] = pACDCore
-
-			imageCounter += 1
 		}
 	}
+}
+
+func connectAnimatedImageDataWithRenderAndAnimateComponentUnwrapImageRange(fullImagePath string) ([]string, bool) {
+	var imagePathsWhenRange []string
+
+	if strings.Contains(fullImagePath, "till") && strings.Count(fullImagePath, "|") == 2 {
+		posFirstPipe := strings.Index(fullImagePath, "|")
+		posLastPipe := strings.LastIndex(fullImagePath, "|")
+		posTill := strings.Index(fullImagePath, "till")
+		firstImageNumber := fullImagePath[posFirstPipe+1:posTill]
+		lastImageNumber := fullImagePath[posTill+4:posLastPipe]
+		lowerBound, _ := strconv.Atoi(firstImageNumber)
+		upperBound, _ := strconv.Atoi(lastImageNumber)
+
+		assumeZeroPadding := false
+
+		if strings.HasPrefix(firstImageNumber, "0") {
+			assumeZeroPadding = true
+		}
+		posLastFwdSlash := strings.LastIndex(fullImagePath, "/")
+		fullBasePath := fullImagePath[:posLastFwdSlash+1]
+		posFormatDot := strings.LastIndex(fullImagePath, ".")
+		format := fullImagePath[posFormatDot:len(fullImagePath)]
+		posFirstImageNumber := strings.Index(fullImagePath, firstImageNumber)
+		baseImageName := fullImagePath[posLastFwdSlash+1:posFirstImageNumber]
+		basePathWithBaseImageName := fullBasePath + baseImageName
+		imagePathsWhenRange = make([]string, 0, 0)
+
+		for i := lowerBound; i <= upperBound; i++ {
+			if assumeZeroPadding {
+				if i < 10 {
+					imagePathsWhenRange = append(imagePathsWhenRange, basePathWithBaseImageName + "0" + strconv.Itoa(i) + format)
+				} else {
+					imagePathsWhenRange = append(imagePathsWhenRange, basePathWithBaseImageName + strconv.Itoa(i) + format)
+				}
+			} else {
+				imagePathsWhenRange = append(imagePathsWhenRange, basePathWithBaseImageName + strconv.Itoa(i) + format)
+			}
+		}
+	}
+    return imagePathsWhenRange, len(imagePathsWhenRange) > 1
 }
 
 func connectStillImageDataWithRenderAndAnimateComponentData(game *Game, entityIDStr string, entityDescription *EntityJSONConfig, assetDescriptions *map[string]*AssetJSONConfig) {
@@ -258,6 +329,10 @@ func connectStillImageDataWithRenderAndAnimateComponentData(game *Game, entityID
 	reference := entityDescription.Reference
 
 	pRCD := entityManager.GetComponentDataByName(uint64(entityID), "RENDER_COMPONENT").(*ecs.RenderComponentData)
+
+	if pRCD.Text != nil {
+		return
+	}
 
 	var fullImagePath string
 	var imageName string
@@ -302,6 +377,11 @@ func connectTextDataWithRenderAndAnimateComponentData(game *Game, entityIDStr st
 	reference := entityDescription.Reference
 
 	pRCD := entityManager.GetComponentDataByName(uint64(entityID), "RENDER_COMPONENT").(*ecs.RenderComponentData)
+
+	if pRCD.Image != nil {
+		return
+	}
+
 	mainEntity := (*assetDescriptions)[reference]
 
 	if mainEntity.Text != "" && mainEntity.FontSize > 0 {

@@ -3,6 +3,8 @@ package ecs
 import (
 	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
+	"log"
+	"strings"
 )
 
 type RenderComponentData struct {
@@ -65,19 +67,26 @@ func (sys *RenderSystem) UpdateComponent(delta float64, sliceWithComponentData [
 	texture := pRCD.Texture
 
 	if pRCD.Image != nil {
+		// We render images
 		img = pRCD.Image
 		h = img.H
 		w = img.W
 		dstRect = &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: w, H: h}
+
+		if pTCD.FlipImg {
+			sdlFlip = sdl.FLIP_HORIZONTAL
+		} else {
+			sdlFlip = sdl.FLIP_NONE
+		}
 	} else {
+		// We render text
 		dstRect = &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: 125, H: 25}
 	}
 
-	if pTCD.FlipImg {
-		sdlFlip = sdl.FLIP_HORIZONTAL
-	} else {
-		sdlFlip = sdl.FLIP_NONE
+	if strings.Contains(pRCD.Path, "p1") {
+		log.Printf("%v+|%+v|%+v\n", pRCD.Path, pRCD.Image, pRCD.Texture)
 	}
+
 
 	sys.Renderer.CopyEx(texture, nil, dstRect, 0.0, nil, sdlFlip)
 }

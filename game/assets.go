@@ -8,7 +8,7 @@ import (
 type animation struct {
 	SpritesheetAvailable bool   `json:"SpritesheetAvailable"`
 	Spritesheet          string `json:"Spritesheet"`
-	NumberAnimations     int8   `json:"NumberAnimations"`
+	NumberAnimations     uint8   `json:"NumberAnimations"`
 	Image                string `json:"Image"`
 	ImageBasePath        string `json:"ImageBasePath"`
 }
@@ -17,7 +17,7 @@ type AssetJSONConfig struct {
 	AnimatedByDefault        bool                   `json:"AnimatedByDefault"`
 	ImagesBasePath           string                 `json:"ImagesBasePath"`
 	Image                    string                 `json:"Image"`
-	DefaultAnimationDuration int8                   `json:"DefaultAnimationDuration"`
+	DefaultAnimationDuration uint8                   `json:"DefaultAnimationDuration"`
 	Animations               *map[string]*animation `json:"Animations"`
 	FontSize                 uint8                  `json:"FontSize"`
 	Text                     string                 `json:"Text"`
