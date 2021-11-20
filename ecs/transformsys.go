@@ -39,17 +39,12 @@ func (sys *TransformSystem) Run(delta float64, statemachine *statemachine.StateM
 
 		pTCD := sys.GetComponentData(entityID).(*TransformComponentData)
 
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pTCD
-
-		sliceOtherParametersUpdateComponent := make([]interface{}, 0, 0)
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
+		sys.UpdateComponent(delta, pTCD)
 	}
 }
 
-func (sys *TransformSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
-	pTCD := sliceWithComponentData[0].(*TransformComponentData)
+func (sys *TransformSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
+	pTCD := essentialData[0].(*TransformComponentData)
 	pTCD.Posx += pTCD.Hspeed * delta
 	pTCD.Posy -= pTCD.Vspeed
 }

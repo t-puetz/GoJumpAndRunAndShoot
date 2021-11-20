@@ -34,19 +34,14 @@ func (sys *ActiveControlSystem) Run(delta float64, statemachine *statemachine.St
 		}
 
 		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT")
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pTCD
 
-		sliceOtherParametersUpdateComponent := make([]interface{}, 1, 1)
-		sliceOtherParametersUpdateComponent[0] = statemachine
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
+		sys.UpdateComponent(delta, pTCD, statemachine)
 	}
 }
 
-func (sys *ActiveControlSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
-	pTCD := sliceWithComponentData[0].(*TransformComponentData)
-	sm := sliceOtherParametersUpdateComponent[0].(*statemachine.StateMachine)
+func (sys *ActiveControlSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
+	pTCD := essentialData[0].(*TransformComponentData)
+	sm := essentialData[1].(*statemachine.StateMachine)
 
 	if sm.CurrentState == statemachine.WELCOME_SCREEN {
 		if sys.Keyboard.KeyHeldDown(sdl.Keycode('s')) {

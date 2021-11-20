@@ -30,22 +30,15 @@ func (sys *GravitySystem) Run(delta float64, statemachine *statemachine.StateMac
 			continue
 		}
 
-		pGCD := sys.GetComponentData(entityID).(*GravityComponentData)
+		//pGCD := sys.GetComponentData(entityID).(*GravityComponentData)
 		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
 
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pGCD
-		sliceWithComponentData[1] = pTCD
-
-		sliceOtherParametersUpdateComponent := make([]interface{}, 1, 1)
-		sliceOtherParametersUpdateComponent[0] = GRAVITY
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
+		sys.UpdateComponent(delta, pTCD, GRAVITY)
 	}
 }
 
-func (sys *GravitySystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
-    pTCD := sliceWithComponentData[1].(*TransformComponentData)
-	GRAVITY := sliceOtherParametersUpdateComponent[0].(float64)
+func (sys *GravitySystem) UpdateComponent(delta float64, essentialData ...interface{}) {
+    pTCD := essentialData[0].(*TransformComponentData)
+	GRAVITY := essentialData[1].(float64)
 	pTCD.Vspeed -= GRAVITY
 }

@@ -63,7 +63,8 @@ func (sys *CollideSystem) Run(delta float64, statemachine *statemachine.StateMac
 			sliceOtherParametersUpdateComponent[3] = ent1
 			sliceOtherParametersUpdateComponent[4] = ent2
 
-			sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
+			sys.UpdateComponent(delta, pTCD1, pTCD2, entityOneHasDynamicComponent, entityTwoHasDynamicComponent,
+				collisionDirections, ent1, ent2)
 		}
 	}
 }
@@ -99,15 +100,15 @@ func (sys *CollideSystem) CollideSystemCoreDetectAABB(ecsManager *ECSManager, en
 	return collisionDirections
 }
 
-func (sys *CollideSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
-	pTCD1 := sliceWithComponentData[0].(*TransformComponentData)
-	pTCD2 := sliceWithComponentData[1].(*TransformComponentData)
+func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interface{}) {
+	pTCD1 := essentialData[0].(*TransformComponentData)
+	pTCD2 := essentialData[1].(*TransformComponentData)
 
-	entityOneHasDynamicComponent := sliceOtherParametersUpdateComponent[0].(bool)
-	entityTwoHasDynamicComponent := sliceOtherParametersUpdateComponent[1].(bool)
-	collisionDirections := sliceOtherParametersUpdateComponent[2].(map[string]bool)
-	ent1 := sliceOtherParametersUpdateComponent[3].(uint64)
-	ent2 := sliceOtherParametersUpdateComponent[4].(uint64)
+	entityOneHasDynamicComponent := essentialData[2].(bool)
+	entityTwoHasDynamicComponent := essentialData[3].(bool)
+	collisionDirections := essentialData[4].(map[string]bool)
+	ent1 := essentialData[5].(uint64)
+	ent2 := essentialData[6].(uint64)
 
 	imgRectOne := sys.ECSManager.GetEntityRect(ent1)
 	imgRectTwo := sys.ECSManager.GetEntityRect(ent2)

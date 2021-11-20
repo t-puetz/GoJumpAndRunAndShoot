@@ -44,20 +44,14 @@ func (sys *RenderSystem) Run(delta float64, statemachine *statemachine.StateMach
 		pRCD := sys.GetComponentData(entityID).(*RenderComponentData)
 		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
 
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pRCD
-		sliceWithComponentData[1] = pTCD
-
-		sliceOtherParametersUpdateComponent := make([]interface{}, 1, 1)
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
+		sys.UpdateComponent(delta, pRCD, pTCD)
 	}
 	sys.Renderer.Present()
 }
 
-func (sys *RenderSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
-	pRCD := sliceWithComponentData[0].(*RenderComponentData)
-	pTCD := sliceWithComponentData[1].(*TransformComponentData)
+func (sys *RenderSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
+	pRCD := essentialData[0].(*RenderComponentData)
+	pTCD := essentialData[1].(*TransformComponentData)
 
 	var img *sdl.Surface
 	var h int32

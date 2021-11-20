@@ -76,17 +76,13 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 		sliceWithComponentData[0] = pRCD
 		sliceWithComponentData[1] = pACDCore
 
-		sliceOtherParametersUpdateComponent := make([]interface{}, 1, 1)
-		sliceOtherParametersUpdateComponent[0] = animationName
-
-		sys.UpdateComponent(delta, sliceWithComponentData, sliceOtherParametersUpdateComponent)
+		sys.UpdateComponent(delta, pRCD, pACDCore)
 	}
 }
 
-func (sys *AnimateSystem) UpdateComponent(delta float64, sliceWithComponentData []interface{}, sliceOtherParametersUpdateComponent []interface{}) {
-	pRCD := sliceWithComponentData[0].(*RenderComponentData)
-	pACDCore := sliceWithComponentData[1].(*AnimationComponentDataCore)
-
+func (sys *AnimateSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
+	pRCD := essentialData[0].(*RenderComponentData)
+	pACDCore := essentialData[1].(*AnimationComponentDataCore)
 
 	timeForNextImage := pACDCore.CurrentFrame%pACDCore.DefaultAnimationDuration == 0
 	moreThanOneImage :=  pACDCore.NumberAnimations > 1

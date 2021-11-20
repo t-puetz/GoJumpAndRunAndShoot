@@ -271,7 +271,7 @@ func NewCommonSystemData(componentName string, ecsManager *ECSManager) *CommonSy
 
 type System interface {
 	Run(delta float64, statemachine *statemachine.StateMachine)
-	UpdateComponent(float64, []interface{}, []interface{})
+	UpdateComponent(float64, ...interface{})
 }
 
 func (bs *CommonSystemData) GetComponentData(entityID uint64) interface{} {
