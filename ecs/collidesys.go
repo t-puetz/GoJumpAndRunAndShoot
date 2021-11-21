@@ -61,38 +61,25 @@ func (sys *CollideSystem) Run(delta float64, statemachine *statemachine.StateMac
 			pCCD1 := sys.GetComponentData(ent1).(*CollisionComponentData)
 			pCCD2 := sys.GetComponentData(ent2).(*CollisionComponentData)
 
-			collisionDirections := sys.CollideSystemCoreDetectAABB(sys.ECSManager, ent1, ent2, pTCD1, pTCD2, pCCD1, pCCD2)
+			areColliding := sys.CollideSystemCoreDetectAABB(sys.ECSManager, ent1, ent2, pTCD1, pTCD2, pCCD1, pCCD2)
 
-			if collisionDirections == nil {
+			if !areColliding {
 				continue
 			}
 
-			sliceWithComponentData := make([]interface{}, 2, 2)
-			sliceWithComponentData[0] = pTCD1
-			sliceWithComponentData[1] = pTCD2
-
-			sliceOtherParametersUpdateComponent := make([]interface{}, 5, 5)
-			sliceOtherParametersUpdateComponent[0] = entityOneHasDynamicComponent
-			sliceOtherParametersUpdateComponent[1] = entityTwoHasDynamicComponent
-			sliceOtherParametersUpdateComponent[2] = collisionDirections
-			sliceOtherParametersUpdateComponent[3] = ent1
-			sliceOtherParametersUpdateComponent[4] = ent2
-
-			sys.UpdateComponent(delta, pTCD1, pTCD2, entityOneHasDynamicComponent, entityTwoHasDynamicComponent,
-				collisionDirections, ent1, ent2, pCCD1, pCCD2)
+			sys.UpdateComponent(delta, pTCD1, pTCD2, entityOneHasDynamicComponent, entityTwoHasDynamicComponent, pCCD1, pCCD2)
 		}
 	}
 }
 
-func (sys *CollideSystem) CollideSystemCoreDetectAABB(ecsManager *ECSManager, ent1, ent2 uint64, pTCD1, pTCD2 *TransformComponentData, pCCD1, pCCD2 * CollisionComponentData) map[string]bool {
+func (sys *CollideSystem) CollideSystemCoreDetectAABB(ecsManager *ECSManager, ent1, ent2 uint64, pTCD1, pTCD2 *TransformComponentData, pCCD1, pCCD2 * CollisionComponentData) bool {
 	imgRectOne := ecsManager.GetEntityRect(ent1)
 	imgRectTwo := ecsManager.GetEntityRect(ent2)
 
-	collisionDirections := make(map[string]bool)
 	collideRect, areColliding := imgRectOne.Intersect(imgRectTwo)
 
 	if !areColliding {
-		return nil
+		return false
 	}
 
 	pCCD1.EnitytCollidingWith = ent2
@@ -124,7 +111,7 @@ func (sys *CollideSystem) CollideSystemCoreDetectAABB(ecsManager *ECSManager, en
 		pCCD2.CollisionDirection = "top"
 	}
 
-	return collisionDirections
+	return true
 }
 
 func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interface{}) {
@@ -133,16 +120,10 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 
 	entityOneHasDynamicComponent := essentialData[2].(bool)
 	entityTwoHasDynamicComponent := essentialData[3].(bool)
-	//collisionDirections := essentialData[4].(map[string]bool)
-	//ent1 := essentialData[5].(uint64)
-	//ent2 := essentialData[6].(uint64)
-
-	pCCD1 := essentialData[7].(*CollisionComponentData)
-	pCCD2 := essentialData[8].(*CollisionComponentData)
 
 
-	//imgRectOne := sys.ECSManager.GetEntityRect(ent1)
-	//imgRectTwo := sys.ECSManager.GetEntityRect(ent2)
+	pCCD1 := essentialData[4].(*CollisionComponentData)
+	pCCD2 := essentialData[5].(*CollisionComponentData)
 
 	if entityOneHasDynamicComponent {
 		if pCCD1.CollisionDirection == "right" {
