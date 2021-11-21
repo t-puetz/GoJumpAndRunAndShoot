@@ -22,7 +22,7 @@ type Game struct {
 	StateMachine      *statemachine.StateMachine
 }
 
-func (g *Game) PrepareBasicGameData(sm *statemachine.StateMachine) {
+func (g *Game) PrepareBasicGameData() {
 	g.ECSManager = ecs.NewECSManager()
 
 	g.ECSManager.Systems[0] = ecs.NewActiveControlSystem(g.ECSManager, g.Keyboard)
@@ -32,8 +32,7 @@ func (g *Game) PrepareBasicGameData(sm *statemachine.StateMachine) {
 	g.ECSManager.Systems[4] = ecs.NewAnimateSystem(g.ECSManager)
 	g.ECSManager.Systems[5] = ecs.NewRenderSystem(g.ECSManager, g.Renderer)
 
-	g.StateMachine = sm
-
+	g.StateMachine = statemachine.NewStateMachine()
 }
 
 func (g *Game) InitializeSDL() {
@@ -91,11 +90,14 @@ func (g *Game) RunSystems(delta float64) {
 	}
 }
 
-func (g *Game) RunWelcomeScreen(runWelcomeScreen bool) {
+func (g *Game) RunWelcomeScreen() {
+	runWelcomeScreen := true
+
 	for runWelcomeScreen {
 		// Is decided in ActiveControlSystem by Pressing S:
 		if g.StateMachine.CurrentState == statemachine.GAME {
 			runWelcomeScreen = false
+			g.StateMachine.DoTransition(statemachine.WELCOME_SCREEN, statemachine.GAME)
 		}
 
 		g.runBasicQuitKeyboardEventLoop(runWelcomeScreen)
@@ -150,7 +152,9 @@ func (g *Game) decideGameOrPauseState(delta float64) {
 	}
 }
 
-func (g *Game) Run(running bool) {
+func (g *Game) Run() {
+	running := true
+
 	var now time.Time
 	var elapsedTime time.Duration
 
