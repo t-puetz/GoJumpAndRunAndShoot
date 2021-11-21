@@ -72,15 +72,21 @@ func (sys *RenderSystem) UpdateComponent(delta float64, essentialData ...interfa
 		} else {
 			sdlFlip = sdl.FLIP_NONE
 		}
+
+		// Just for debugging
+		if strings.Contains(pRCD.Path, "walk") {
+			// TODO: Why do I only ever get image 11 "p1_walk11.png" from the AnimateSystem although the AnimateSystem correctly finds ALL the images and passes them to the render data???
+			log.Printf("Image Render Sytem: %v\n", pRCD.Path)
+		}
+
+		//if strings.Contains(pRCD.Path, "p1") {
+		//	log.Println(pTCD.IsNotMoving)
+		//}
+		// End of debugging
 	} else {
 		// We render text
 		dstRect = &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: 125, H: 25}
 	}
-
-	if strings.Contains(pRCD.Path, "p1") {
-		log.Printf("%v+|%+v|%+v\n", pRCD.Path, pRCD.Image, pRCD.Texture)
-	}
-
 
 	sys.Renderer.CopyEx(texture, nil, dstRect, 0.0, nil, sdlFlip)
 }

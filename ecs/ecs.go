@@ -223,6 +223,9 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 					cd.Data = &AnimateComponentData{AnimationData: &acd}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["GRAVITY_COMPONENT"]:
 					cd.Data = &GravityComponentData{}
+				case (*e.ComponentIDStorage.ComponentNameToIDMap)["COLLIDE_COMPONENT"]:
+					collisionCoreData := &CollisionCoreData{}
+					cd.Data = &CollisionComponentData{collisionCoreData}
 				}
 			}
 			entityComponentStringToComponentDataMap[keyForEntityComponentDataMap] = &cd
@@ -264,8 +267,8 @@ type CommonSystemData struct {
 
 func NewCommonSystemData(componentName string, ecsManager *ECSManager) *CommonSystemData {
 	return &CommonSystemData{
-		SystemID: ecsManager.GetComponentID(componentName),
-		ECSManager:     ecsManager,
+		SystemID:   ecsManager.GetComponentID(componentName),
+		ECSManager: ecsManager,
 	}
 }
 

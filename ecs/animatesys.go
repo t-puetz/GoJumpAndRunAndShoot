@@ -3,6 +3,7 @@ package ecs
 import (
 	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
+	"log"
 )
 
 type AnimationComponentDataCore struct {
@@ -57,14 +58,21 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 
 		var animationName string
 
-		if pTCD.IsNotMoving {
-			animationName = "Idle"
-		} else {
-			animationName = "Walk"
-		}
 
-		if pTCD.IsJumping {
-			animationName = "Jump"
+		if sys.ECSManager.HasNamedComponent(components, "ACTIVE_CONTROL_COMPONENT") {
+			// Check for Player
+			if pTCD.IsNotMoving {
+				animationName = "Idle"
+			} else {
+				animationName = "Walk"
+			}
+
+			if pTCD.IsJumping {
+				animationName = "Jump"
+			}
+		} else {
+			// "Dead, non-moving objects"
+			animationName = "Idle"
 		}
 
 		if !sys.ECSManager.HasNamedComponent(components, "TRANSFORM_COMPONENT") {
@@ -72,17 +80,15 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 		}
 
 		pACDCore := animationTypeMap[animationName]
-		sliceWithComponentData := make([]interface{}, 2, 2)
-		sliceWithComponentData[0] = pRCD
-		sliceWithComponentData[1] = pACDCore
 
-		sys.UpdateComponent(delta, pRCD, pACDCore)
+		sys.UpdateComponent(delta, pRCD, pACDCore, animationName)
 	}
 }
 
 func (sys *AnimateSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
 	pRCD := essentialData[0].(*RenderComponentData)
 	pACDCore := essentialData[1].(*AnimationComponentDataCore)
+	//animationName := essentialData[2].(string)
 
 	timeForNextImage := pACDCore.CurrentFrame%pACDCore.DefaultAnimationDuration == 0
 	moreThanOneImage :=  pACDCore.NumberAnimations > 1
@@ -94,15 +100,18 @@ func (sys *AnimateSystem) UpdateComponent(delta float64, essentialData ...interf
 	}
 
 	for i := 0; i < int(pACDCore.NumberAnimations) && moreThanOneImage && timeForNextImage; i++ {
+		if i == 0 {
+			pACDCore.CurrentFrame = 0
+		}
+
+		log.Printf("Animate System 1: %+v\n", pACDCore.Images[i])
 		pRCD.Image = pACDCore.Images[i]
+		log.Printf("Animate System 2: %+v\n", pRCD.Image)
 		pRCD.Texture = pACDCore.Textures[i]
+		log.Printf("Animate System 1: %v\n", pACDCore.Paths[i])
 		pRCD.Path = pACDCore.Paths[i]
+		log.Printf("Animate System 2: %v\n", pRCD.Path)
 
 		pACDCore.CurrentFrame++
 	}
-
-	if pACDCore.CurrentFrame == 240 {
-		pACDCore.CurrentFrame = 0
-	}
-
 }

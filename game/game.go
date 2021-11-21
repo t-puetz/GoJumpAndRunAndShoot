@@ -80,8 +80,14 @@ func (g *Game) LoadWelcomeScreen() {
 }
 
 func (g *Game) RunSystems(delta float64) {
-	for _, system := range g.ECSManager.Systems {
-		system.Run(delta, g.StateMachine)
+	for i, system := range g.ECSManager.Systems {
+		if i != 5  {
+			system.Run(delta, g.StateMachine)
+		} else {
+			// 5 is the index of the RenderSystem
+			go system.Run(delta, g.StateMachine)
+		}
+
 	}
 }
 
@@ -115,7 +121,6 @@ func (g *Game) runBasicQuitKeyboardEventLoop(running bool) {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
 		case *sdl.QuitEvent:
-			println("Quit")
 			_ = g.Window.Destroy()
 			running = false
 			sdl.Quit()
