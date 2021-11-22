@@ -3,7 +3,6 @@ package ecs
 import (
 	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
-	"sync"
 )
 
 type RenderComponentData struct {
@@ -17,14 +16,12 @@ type RenderComponentData struct {
 type RenderSystem struct {
 	*CommonSystemData
 	Renderer *sdl.Renderer
-	mu *sync.Mutex
 }
 
 func NewRenderSystem(e *ECSManager, renderer *sdl.Renderer) *RenderSystem {
 	return &RenderSystem{
 		CommonSystemData: NewCommonSystemData("RENDER_COMPONENT", e),
 		Renderer:         renderer,
-		mu: &sync.Mutex{},
 	}
 }
 
@@ -46,9 +43,7 @@ func (sys *RenderSystem) Run(delta float64, statemachine *statemachine.StateMach
 		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
 		sys.UpdateComponent(delta, pRCD, pTCD)
 	}
-	sys.mu.Lock()
 	sys.Renderer.Present()
-	sys.mu.Unlock()
 }
 
 func (sys *RenderSystem) UpdateComponent(delta float64, essentialData ...interface{}) {

@@ -80,6 +80,8 @@ func (sys *ActiveControlSystem) UpdateComponent(delta float64, essentialData ...
 		if entityStoppedMoving {
 			pTCD.Hspeed = 0
 			pTCD.IsNotMoving = true
+		} else {
+			pTCD.IsNotMoving = false
 		}
 	}
 }

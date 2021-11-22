@@ -160,7 +160,6 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 		if pCCD2.CollisionDirection == "bottom" {
 			pTCD2.Posy += float64(pCCD2.IntersectRect.H)
 			pTCD2.Vspeed = 0
-			pTCD2.IsNotMoving = true
 			pTCD2.IsJumping = false
 		} else if pCCD2.CollisionDirection == "top" {
 			pTCD2.Posy -= float64(pCCD2.IntersectRect.H)
