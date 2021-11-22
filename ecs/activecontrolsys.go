@@ -61,11 +61,13 @@ func (sys *ActiveControlSystem) UpdateComponent(delta float64, essentialData ...
 		if sys.Keyboard.KeyHeldDown(sdl.Keycode('a')) {
 			pTCD.FlipImg = true
 			pTCD.Hspeed = -5.0
+			pTCD.IsNotMoving = false
 		}
 
 		if sys.Keyboard.KeyHeldDown(sdl.Keycode('d')) {
 			pTCD.FlipImg = false
 			pTCD.Hspeed = 5.0
+			pTCD.IsNotMoving = false
 		}
 
 		if sys.Keyboard.KeyJustPressed(sdl.Keycode(' ')) && !pTCD.IsJumping {
@@ -78,8 +80,6 @@ func (sys *ActiveControlSystem) UpdateComponent(delta float64, essentialData ...
 		if entityStoppedMoving {
 			pTCD.Hspeed = 0
 			pTCD.IsNotMoving = true
-		} else {
-			pTCD.IsNotMoving = false
 		}
 	}
 }

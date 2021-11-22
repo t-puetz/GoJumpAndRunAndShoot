@@ -10,24 +10,24 @@ type keyMapVal struct {
 }
 
 type Keyboard struct {
-	kmap map[sdl.Keycode]*keyMapVal
+	keymap map[sdl.Keycode]*keyMapVal
 }
 
 func NewKeyboard() *Keyboard {
 	return &Keyboard{
-		kmap: make(map[sdl.Keycode]*keyMapVal),
+		keymap: make(map[sdl.Keycode]*keyMapVal),
 	}
 }
 
 func (k *Keyboard) KeyJustPressed(key sdl.Keycode) bool {
-	if val, ok := k.kmap[key]; ok {
+	if val, ok := k.keymap[key]; ok {
 		return val.pressed && val.changed
 	}
 	return false
 }
 
 func (k *Keyboard) KeyHeldDown(key sdl.Keycode) bool {
-	if val, ok := k.kmap[key]; ok {
+	if val, ok := k.keymap[key]; ok {
 		return val.pressed
 	}
 	return false
@@ -35,7 +35,7 @@ func (k *Keyboard) KeyHeldDown(key sdl.Keycode) bool {
 
 func (k *Keyboard) KeyReleased(key sdl.Keycode) bool {
 	// Can only ever be true if key already exists in keymap
-	if val, ok := k.kmap[key]; ok {
+	if val, ok := k.keymap[key]; ok {
 		return (! val.pressed) && val.changed
 	}
 	return false
@@ -44,7 +44,7 @@ func (k *Keyboard) KeyReleased(key sdl.Keycode) bool {
 func (k *Keyboard) OnEvent(t *sdl.KeyboardEvent) {
 	keyCode := t.Keysym.Sym
 
-	if val, ok := k.kmap[keyCode]; ok {
+	if val, ok := k.keymap[keyCode]; ok {
 		if t.State == sdl.PRESSED {
 			val.changed = ! val.pressed
 			val.pressed = true
@@ -53,12 +53,14 @@ func (k *Keyboard) OnEvent(t *sdl.KeyboardEvent) {
 			val.pressed = false
 		}
 	} else if t.State == sdl.PRESSED {
-		k.kmap[keyCode] = &keyMapVal{pressed: true, changed: true}
+		// The key code map key does not yet exist
+		// so we initially create an entry in the keymap
+		k.keymap[keyCode] = &keyMapVal{pressed: true, changed: true}
 	}
 }
 
 func (k *Keyboard) ResetChangedStates() {
-	for _, val := range k.kmap {
+	for _, val := range k.keymap {
 		val.changed = false
 	}
 }

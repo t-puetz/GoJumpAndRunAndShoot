@@ -58,7 +58,6 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 
 		var animationName string
 
-
 		if sys.ECSManager.HasNamedComponent(components, "ACTIVE_CONTROL_COMPONENT") {
 			// Check for Player
 			if pTCD.IsNotMoving {
@@ -70,14 +69,9 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 			if pTCD.IsJumping {
 				animationName = "Jump"
 			}
-		} else {
-			// "Dead, non-moving objects"
-			animationName = "Idle"
 		}
 
-		if !sys.ECSManager.HasNamedComponent(components, "TRANSFORM_COMPONENT") {
-			animationName = "Fallback"
-		}
+		log.Println(animationName)
 
 		pACDCore := animationTypeMap[animationName]
 
@@ -88,10 +82,11 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 func (sys *AnimateSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
 	pRCD := essentialData[0].(*RenderComponentData)
 	pACDCore := essentialData[1].(*AnimationComponentDataCore)
+	pACDCore.CurrentFrame++
 	//animationName := essentialData[2].(string)
 
 	timeForNextImage := pACDCore.CurrentFrame%pACDCore.DefaultAnimationDuration == 0
-	moreThanOneImage :=  pACDCore.NumberAnimations > 1
+	moreThanOneImage := pACDCore.NumberAnimations > 1
 
 	if ! moreThanOneImage {
 		pRCD.Image = pACDCore.Images[0]
@@ -99,19 +94,31 @@ func (sys *AnimateSystem) UpdateComponent(delta float64, essentialData ...interf
 		pRCD.Path = pACDCore.Paths[0]
 	}
 
-	for i := 0; i < int(pACDCore.NumberAnimations) && moreThanOneImage && timeForNextImage; i++ {
-		if i == 0 {
-			pACDCore.CurrentFrame = 0
-		}
-
-		log.Printf("Animate System 1: %+v\n", pACDCore.Images[i])
-		pRCD.Image = pACDCore.Images[i]
-		log.Printf("Animate System 2: %+v\n", pRCD.Image)
-		pRCD.Texture = pACDCore.Textures[i]
-		log.Printf("Animate System 1: %v\n", pACDCore.Paths[i])
-		pRCD.Path = pACDCore.Paths[i]
-		log.Printf("Animate System 2: %v\n", pRCD.Path)
-
-		pACDCore.CurrentFrame++
+	if ! timeForNextImage || ! moreThanOneImage {
+        return
 	}
+
+	for i, image := range pACDCore.Images {
+		log.Println(pRCD.Path)
+        if pRCD.Image == image {
+			log.Println(i, image, pRCD.Image, pRCD.Path)
+			var nextIndex int
+
+			if i < len(pACDCore.Images) - 1 {
+				nextIndex = i + 1
+			} else if i == len(pACDCore.Images) - 1 {
+				nextIndex = 0
+			}
+
+			pRCD.Image = pACDCore.Images[nextIndex]
+			pRCD.Texture = pACDCore.Textures[nextIndex]
+			pRCD.Path = pACDCore.Paths[nextIndex]
+			log.Println(pRCD.Path)
+
+			break
+		}
+	}
+
+
+	pACDCore.CurrentFrame = 0
 }

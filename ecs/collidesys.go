@@ -121,7 +121,6 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 	entityOneHasDynamicComponent := essentialData[2].(bool)
 	entityTwoHasDynamicComponent := essentialData[3].(bool)
 
-
 	pCCD1 := essentialData[4].(*CollisionComponentData)
 	pCCD2 := essentialData[5].(*CollisionComponentData)
 
@@ -139,7 +138,6 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 		if pCCD1.CollisionDirection == "bottom" {
 			pTCD1.Posy -= float64(pCCD1.IntersectRect.H)
 			pTCD1.Vspeed = 0
-			pTCD1.IsNotMoving = true
 			pTCD1.IsJumping = false
 		} else if pCCD1.CollisionDirection == "top" {
 			pTCD1.Posy += float64(pCCD1.IntersectRect.H)

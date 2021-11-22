@@ -79,34 +79,26 @@ func (g *Game) LoadWelcomeScreen() {
 }
 
 func (g *Game) RunSystems(delta float64) {
-	for i, system := range g.ECSManager.Systems {
-		if i != 5  {
-			system.Run(delta, g.StateMachine)
-		} else {
-			// 5 is the index of the RenderSystem
-			go system.Run(delta, g.StateMachine)
-		}
-
+	for _, system := range g.ECSManager.Systems {
+		system.Run(delta, g.StateMachine)
 	}
 }
 
 func (g *Game) RunWelcomeScreen() {
-	runWelcomeScreen := true
-
-	for runWelcomeScreen {
+	for {
 		// Is decided in ActiveControlSystem by Pressing S:
 		if g.StateMachine.CurrentState == statemachine.GAME {
-			runWelcomeScreen = false
-			g.StateMachine.DoTransition(statemachine.WELCOME_SCREEN, statemachine.GAME)
+			break
 		}
 
-		g.runBasicQuitKeyboardEventLoop(runWelcomeScreen)
+		g.runBasicQuitKeyboardEventLoop()
 
 		g.ECSManager.Systems[0].Run(1.0, g.StateMachine)
 		g.ECSManager.Systems[5].Run(1.0, g.StateMachine)
 
 		sdl.Delay(30)
 	}
+	g.StateMachine.DoTransition(statemachine.WELCOME_SCREEN, statemachine.GAME)
 }
 
 func (g *Game) renderGamePausedText() {
@@ -119,12 +111,11 @@ func (g *Game) renderGamePausedText() {
 	_ = g.Window.UpdateSurface()
 }
 
-func (g *Game) runBasicQuitKeyboardEventLoop(running bool) {
+func (g *Game) runBasicQuitKeyboardEventLoop() {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
 		case *sdl.QuitEvent:
 			_ = g.Window.Destroy()
-			running = false
 			sdl.Quit()
 			os.Exit(0)
 		case *sdl.KeyboardEvent:
@@ -153,22 +144,20 @@ func (g *Game) decideGameOrPauseState(delta float64) {
 }
 
 func (g *Game) Run() {
-	running := true
-
 	var now time.Time
 	var elapsedTime time.Duration
 
 	lastTime := time.Now()
-	timePerFrame := 1000.0 / 60.0
+	timePerFrame := 1000.0 / 70.0
 
-	for running {
+	for {
 		now = time.Now()
 		elapsedTime = now.Sub(lastTime)
 		lastTime = now
 		delta := float64(elapsedTime.Milliseconds()) / timePerFrame
 
 		g.Keyboard.ResetChangedStates()
-		g.runBasicQuitKeyboardEventLoop(running)
+		g.runBasicQuitKeyboardEventLoop()
 		g.decideGameOrPauseState(delta)
 
 		sdl.Delay(10)

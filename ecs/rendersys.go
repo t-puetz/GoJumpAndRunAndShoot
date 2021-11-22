@@ -3,8 +3,7 @@ package ecs
 import (
 	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
-	"log"
-	"strings"
+	"sync"
 )
 
 type RenderComponentData struct {
@@ -18,12 +17,14 @@ type RenderComponentData struct {
 type RenderSystem struct {
 	*CommonSystemData
 	Renderer *sdl.Renderer
+	mu *sync.Mutex
 }
 
 func NewRenderSystem(e *ECSManager, renderer *sdl.Renderer) *RenderSystem {
 	return &RenderSystem{
 		CommonSystemData: NewCommonSystemData("RENDER_COMPONENT", e),
 		Renderer:         renderer,
+		mu: &sync.Mutex{},
 	}
 }
 
@@ -43,10 +44,11 @@ func (sys *RenderSystem) Run(delta float64, statemachine *statemachine.StateMach
 
 		pRCD := sys.GetComponentData(entityID).(*RenderComponentData)
 		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
-
 		sys.UpdateComponent(delta, pRCD, pTCD)
 	}
+	sys.mu.Lock()
 	sys.Renderer.Present()
+	sys.mu.Unlock()
 }
 
 func (sys *RenderSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
@@ -60,8 +62,10 @@ func (sys *RenderSystem) UpdateComponent(delta float64, essentialData ...interfa
 	var sdlFlip sdl.RendererFlip
 	texture := pRCD.Texture
 
-	if pRCD.Image != nil {
-		// We render images
+	renderImage := pRCD.Image != nil && pRCD.Text == nil
+	renderText := pRCD.Image == nil && pRCD.Text != nil
+
+	if renderImage {
 		img = pRCD.Image
 		h = img.H
 		w = img.W
@@ -72,20 +76,10 @@ func (sys *RenderSystem) UpdateComponent(delta float64, essentialData ...interfa
 		} else {
 			sdlFlip = sdl.FLIP_NONE
 		}
-
-		// Just for debugging
-		if strings.Contains(pRCD.Path, "walk") {
-			// TODO: Why do I only ever get image 11 "p1_walk11.png" from the AnimateSystem although the AnimateSystem correctly finds ALL the images and passes them to the render data???
-			log.Printf("Image Render Sytem: %v\n", pRCD.Path)
-		}
-
-		//if strings.Contains(pRCD.Path, "p1") {
-		//	log.Println(pTCD.IsNotMoving)
-		//}
-		// End of debugging
-	} else {
-		// We render text
+	} else if renderText {
 		dstRect = &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: 125, H: 25}
+	} else {
+		return
 	}
 
 	sys.Renderer.CopyEx(texture, nil, dstRect, 0.0, nil, sdlFlip)
