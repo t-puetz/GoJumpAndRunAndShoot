@@ -6,9 +6,9 @@ import (
 )
 
 type CollisionCoreData struct {
-	CollisionDirection  string
+	CollisionDirection  map[string]bool
 	IntersectRect       *sdl.Rect
-	EnitytCollidingWith uint64
+	EntityCollidingWith uint64
 }
 
 type CollisionComponentData struct {
@@ -82,34 +82,22 @@ func (sys *CollideSystem) CollideSystemCoreDetectAABB(ecsManager *ECSManager, en
 		return false
 	}
 
-	pCCD1.EnitytCollidingWith = ent2
-	pCCD2.EnitytCollidingWith = ent1
+	pCCD1.EntityCollidingWith = ent2
+	pCCD2.EntityCollidingWith = ent1
 	pCCD1.IntersectRect = &collideRect
 	pCCD2.IntersectRect = &collideRect
 
 	// Ent1 comes from left and hits left side of ent2. Facing does not matter.
-	if imgRectOne.X+imgRectOne.W > imgRectTwo.X && (pTCD1.Hspeed > 0 || pTCD2.Hspeed < 0) {
-		pCCD1.CollisionDirection = "right"
-		pCCD2.CollisionDirection = "left"
-	}
+	pCCD1.CollisionDirection["right"] = imgRectOne.X+imgRectOne.W > imgRectTwo.X && (pTCD1.Hspeed > 0 || pTCD2.Hspeed < 0)
 
 	// Ent1 comes from right and hits right side of ent2. Facing does not matter.
-	if imgRectOne.X < imgRectTwo.X+imgRectTwo.W && (pTCD1.Hspeed < 0 || pTCD2.Hspeed > 0) {
-		pCCD1.CollisionDirection = "left"
-		pCCD2.CollisionDirection = "right"
-	}
+	pCCD1.CollisionDirection["left"] = imgRectOne.X < imgRectTwo.X+imgRectTwo.W && (pTCD1.Hspeed < 0 || pTCD2.Hspeed > 0)
 
 	// Ent1's top edge hits ent2's bottom edge. (e.g. Head hits bottom)
-	if imgRectOne.Y < imgRectTwo.Y+imgRectTwo.H && (pTCD1.Vspeed > 0 || pTCD2.Vspeed < 0) {
-		pCCD1.CollisionDirection = "top"
-		pCCD2.CollisionDirection = "bottom"
-	}
+	pCCD1.CollisionDirection["top"] = imgRectOne.Y < imgRectTwo.Y+imgRectTwo.H && (pTCD1.Vspeed > 0 || pTCD2.Vspeed < 0)
 
 	// Ent1's bottom edge hits ent2's top edge. (e.g. Feet hit ground)
-	if imgRectOne.Y+imgRectOne.H > imgRectTwo.Y && (pTCD1.Vspeed < 0 || pTCD2.Vspeed > 0) {
-		pCCD1.CollisionDirection = "bottom"
-		pCCD2.CollisionDirection = "top"
-	}
+	pCCD1.CollisionDirection["bottom"] = imgRectOne.Y+imgRectOne.H > imgRectTwo.Y && (pTCD1.Vspeed < 0 || pTCD2.Vspeed > 0)
 
 	return true
 }
@@ -125,21 +113,21 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 	pCCD2 := essentialData[5].(*CollisionComponentData)
 
 	if entityOneHasDynamicComponent {
-		if pCCD1.CollisionDirection == "right" {
+		if pCCD1.CollisionDirection["right"] {
 			pTCD1.Posx -= float64(pCCD1.IntersectRect.W)
 			pTCD1.IsNotMoving = true
 			pTCD1.IsJumping = false
-		} else if pCCD1.CollisionDirection == "left" {
+		} else if pCCD1.CollisionDirection["left"] {
 			pTCD1.Posx += float64(pCCD1.IntersectRect.W)
 			pTCD1.IsNotMoving = true
 			pTCD1.IsJumping = false
 		}
 
-		if pCCD1.CollisionDirection == "bottom" {
+		if pCCD1.CollisionDirection["bottom"] {
 			pTCD1.Posy -= float64(pCCD1.IntersectRect.H)
 			pTCD1.Vspeed = 0
 			pTCD1.IsJumping = false
-		} else if pCCD1.CollisionDirection == "top" {
+		} else if pCCD1.CollisionDirection["top"] {
 			pTCD1.Posy += float64(pCCD1.IntersectRect.H)
 			pTCD1.IsJumping = true
 			pTCD1.Vspeed = 0
@@ -147,21 +135,21 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 	}
 
 	if entityTwoHasDynamicComponent {
-		if pCCD2.CollisionDirection == "right" {
+		if pCCD1.CollisionDirection["right"] {
 			pTCD2.Posx += float64(pCCD2.IntersectRect.W)
 			pTCD2.IsNotMoving = true
 			pTCD2.IsJumping = false
-		} else if pCCD2.CollisionDirection == "left"  {
+		} else if pCCD1.CollisionDirection["left"]  {
 			pTCD2.Posx -= float64(pCCD2.IntersectRect.W)
 			pTCD2.IsNotMoving = true
 			pTCD2.IsJumping = false
 		}
 
-		if pCCD2.CollisionDirection == "bottom" {
+		if pCCD1.CollisionDirection["bottom"] {
 			pTCD2.Posy += float64(pCCD2.IntersectRect.H)
 			pTCD2.Vspeed = 0
 			pTCD2.IsJumping = false
-		} else if pCCD2.CollisionDirection == "top" {
+		} else if pCCD1.CollisionDirection["top"] {
 			pTCD2.Posy -= float64(pCCD2.IntersectRect.H)
 			pTCD2.IsJumping = true
 			pTCD2.Vspeed = 0

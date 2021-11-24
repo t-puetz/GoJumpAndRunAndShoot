@@ -11,7 +11,7 @@
       "InitialPosY": 535
     },
 
-    "1-20": {
+    "1-100": {
       "Reference": "Grass",
       "Components": [1, 4, 5, 8],
       "SpreadAlong": "X",
@@ -19,7 +19,7 @@
       "InitialPosY": 635
     },
 
-    "21": {
+    "101": {
       "Reference": "Box",
       "Components": [1, 4, 5, 8],
       "InitialPosX": 500,

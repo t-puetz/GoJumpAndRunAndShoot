@@ -225,6 +225,7 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 					cd.Data = &GravityComponentData{}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["COLLIDE_COMPONENT"]:
 					collisionCoreData := &CollisionCoreData{}
+					collisionCoreData.CollisionDirection = make(map[string]bool)
 					cd.Data = &CollisionComponentData{collisionCoreData}
 				}
 			}

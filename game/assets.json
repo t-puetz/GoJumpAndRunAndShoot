@@ -33,7 +33,7 @@
   "Player1": {
     "AnimatedByDefault": true,
     "ImagesBasePath": "./assets/Player/",
-    "DefaultAnimationDuration": 12,
+    "DefaultAnimationDuration": 8,
 
     "Animations": {
       "Idle": {

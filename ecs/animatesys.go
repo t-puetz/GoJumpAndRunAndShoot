@@ -3,14 +3,9 @@ package ecs
 import (
 	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
-	"log"
 )
 
 type AnimationComponentDataCore struct {
-	// 16 Images should suffice
-	// see ecs.go at data initialization
-	// Probably not smart to hardcode this
-	// Especially for ALL entities
 	NumberAnimations         uint8
 	DefaultAnimationDuration uint8
 	CurrentFrame             uint8
@@ -22,7 +17,7 @@ type AnimationComponentDataCore struct {
 type AnimateComponentData struct {
 	// The string key is the animation's name such as "Idle", "Walk" etc...
 	AnimationData *map[string]*AnimationComponentDataCore
-	LastAnimation            string
+	LastAnimation string
 }
 
 type AnimateSystem struct {
@@ -73,53 +68,59 @@ func (sys *AnimateSystem) Run(delta float64, statemachine *statemachine.StateMac
 			}
 		}
 
-		animationChanged := false
-
-		if pACD.LastAnimation != animationName {
-			animationChanged = true
-		}
-
-		pACD.LastAnimation = animationName
-
 		pACDCore := animationTypeMap[animationName]
 
-		sys.UpdateComponent(delta, pRCD, pACDCore, animationChanged)
+		sys.UpdateComponent(delta, pRCD, pACD, pACDCore, animationName)
 	}
 }
 
 func (sys *AnimateSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
 	pRCD := essentialData[0].(*RenderComponentData)
-	pACDCore := essentialData[1].(*AnimationComponentDataCore)
-	pACDCore.CurrentFrame++
-	animationChanged := essentialData[2].(bool)
+	pACD := essentialData[1].(*AnimateComponentData)
+	pACDCore := essentialData[2].(*AnimationComponentDataCore)
 
-	if animationChanged {
+	pACDCore.CurrentFrame++
+
+	animationName := essentialData[3].(string)
+
+	if pACD.LastAnimation != animationName {
+		pACD.LastAnimation = animationName
 		pACDCore.CurrentFrame = 0
+		pRCD.Image = pACDCore.Images[0]
+		pRCD.Texture = pACDCore.Textures[0]
+		pRCD.Path = pACDCore.Paths[0]
+		return
 	}
 
 	timeForNextImage := pACDCore.CurrentFrame%pACDCore.DefaultAnimationDuration == 0
 	moreThanOneImage := pACDCore.NumberAnimations > 1
 
+	if ! moreThanOneImage {
+		pRCD.Image = pACDCore.Images[0]
+		pRCD.Texture = pACDCore.Textures[0]
+		pRCD.Path = pACDCore.Paths[0]
+	}
 
 	if ! timeForNextImage || ! moreThanOneImage {
         return
 	}
 
+	pACDCore.CurrentFrame = 0
+
+	var nextIndex int
+
 	for i, image := range pACDCore.Images {
-		log.Println(i, image, pRCD.Image, pRCD.Path, pACDCore.CurrentFrame, pACDCore.DefaultAnimationDuration)
-		var nextIndex int
+		if pRCD.Image == image {
+			if i < len(pACDCore.Images)-1 {
+				nextIndex = i + 1
+			} else if i == len(pACDCore.Images)-1 {
+				nextIndex = 0
+			}
 
-		if i < len(pACDCore.Images) - 1 {
-			nextIndex = i + 1
-		} else if i == len(pACDCore.Images) - 1 {
-			nextIndex = 0
+			pRCD.Image = pACDCore.Images[nextIndex]
+			pRCD.Texture = pACDCore.Textures[nextIndex]
+			pRCD.Path = pACDCore.Paths[nextIndex]
+			break
 		}
-
-		pRCD.Image = pACDCore.Images[nextIndex]
-		pRCD.Texture = pACDCore.Textures[nextIndex]
-		pRCD.Path = pACDCore.Paths[nextIndex]
-
-		break
-
 	}
 }
