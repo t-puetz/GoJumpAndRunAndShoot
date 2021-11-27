@@ -11,6 +11,7 @@ import (
 	_ "image/png"
 	"io/ioutil"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -30,6 +31,75 @@ type LevelPhysics struct {
 type LevelJSONConfig struct {
 	LevelPhysics         LevelPhysics                  `json:"LevelPhysics"`
 	EntitiesDescriptions *map[string]*EntityJSONConfig `json:"Entities"`
+	EntitiesDescriptionsOrdered orderedmap.OrderedMap
+}
+
+func convertUnorderedToOrderedEntityDescriptionsMap(unorderedMap *map[string]*EntityJSONConfig) *orderedmap.OrderedMap {
+    keysStrSliceUnordered := make([]string, 0, len(*unorderedMap))
+    keysStrSliceOrdered := make([]string, 0, len(*unorderedMap))
+    keysIntSliceOrdered := make([]int, 0, len(*unorderedMap))
+
+	orderedMap := orderedmap.NewOrderedMap()
+
+	var numKeysUpperLimit uint64
+	var numKeysLowerLimit uint64
+
+	// First extract all the string keys from the unordered, native Go map
+	// and put them in a string slice. If we find a range marked by a hyphen, unravel it
+	for unorderedKey,  _ := range *unorderedMap {
+		if !strings.Contains(unorderedKey, "-") {
+			// Single entity (no hyphen as range indicator)
+            keysStrSliceUnordered = append(keysStrSliceUnordered, unorderedKey)
+		} else {
+			numKeys := strings.Split(unorderedKey, "-")
+			numKeysUpperLimit, _ = strconv.ParseUint(numKeys[1], 10, 64)
+			numKeysLowerLimit, _ = strconv.ParseUint(numKeys[0], 10, 64)
+
+			var i uint64
+			for i = numKeysLowerLimit; i < numKeysUpperLimit + 1; i++ {
+                keysStrSliceUnordered = append(keysStrSliceUnordered, strconv.Itoa(int(i)))
+			}
+		}
+	}
+
+	// Convert the string slice to an int slice to order the keys
+	for _, keyStrUnordered := range keysStrSliceUnordered {
+		keyAsInt, _ := strconv.Atoi(keyStrUnordered)
+        keysIntSliceOrdered = append(keysIntSliceOrdered, keyAsInt)
+	}
+
+	// Sort the int slice
+	sort.Ints(keysIntSliceOrdered)
+
+    // Convert the ordered int slice back to an ordered string slice
+	for _, keyIntOrdered := range keysIntSliceOrdered {
+		keysStrSliceOrdered = append(keysStrSliceOrdered, strconv.Itoa(keyIntOrdered))
+	}
+
+	for _,  keyStrOrdered := range keysStrSliceOrdered {
+		for unorderedOriginalKey, entityJSONConfig := range *unorderedMap {
+			if !strings.Contains(unorderedOriginalKey, "-") {
+				// Single entity (no hyphen as range indicator)
+				if keyStrOrdered == unorderedOriginalKey {
+					keyIntOrdered, _ := strconv.Atoi(keyStrOrdered)
+					orderedMap.Set(uint64(keyIntOrdered), entityJSONConfig)
+				}
+			} else {
+				numKeys := strings.Split(unorderedOriginalKey, "-")
+				numKeysUpperLimit, _ = strconv.ParseUint(numKeys[1], 10, 64)
+				numKeysLowerLimit, _ = strconv.ParseUint(numKeys[0], 10, 64)
+
+				var i uint64
+				for i = numKeysLowerLimit; i < numKeysUpperLimit + 1; i++ {
+					if keyStrOrdered == strconv.Itoa(int(i)) {
+						keyIntOrdered, _ := strconv.Atoi(keyStrOrdered)
+						orderedMap.Set(uint64(keyIntOrdered), entityJSONConfig)
+					}
+				}
+			}
+		}
+	}
+	return orderedMap
 }
 
 func LoadLvlConfig(Game *Game, path string) {
@@ -52,28 +122,16 @@ func LoadLvlConfig(Game *Game, path string) {
 	}
 
 	Game.LvlDescription = lvl
+	Game.LvlDescription.EntitiesDescriptionsOrdered = *(convertUnorderedToOrderedEntityDescriptionsMap(lvl.EntitiesDescriptions))
 }
 
 func (l *LevelJSONConfig) GetEntityDescription(entityID uint64) *EntityJSONConfig {
-	for entityIDStr, entityJSONConfig := range *l.EntitiesDescriptions {
-		var numKeysUpperLimit uint64
-		var numKeysLowerLimit uint64
+	for el := l.EntitiesDescriptionsOrdered.Front(); el != nil; el = el.Next() {
+		currentEntityID := el.Key.(uint64)
+		entityJSONConfig := el.Value.(*EntityJSONConfig)
 
-		if strings.Contains(entityIDStr, "-") {
-			// We have a range of Entities
-			numKeys := strings.Split(entityIDStr, "-")
-			numKeysUpperLimit, _ = strconv.ParseUint(numKeys[1], 10, 64)
-			numKeysLowerLimit, _ = strconv.ParseUint(numKeys[0], 10, 64)
-
-			if entityID >= numKeysLowerLimit && entityID <= numKeysUpperLimit {
-				return entityJSONConfig
-			}
-		} else {
-			// Single Entity
-			entID, _ := strconv.Atoi(entityIDStr)
-			if uint64(entID) == entityID {
-				return entityJSONConfig
-			}
+		if entityID == currentEntityID {
+			return entityJSONConfig
 		}
 	}
 	return nil
@@ -93,12 +151,6 @@ func (l *LevelJSONConfig) GetFirstEntityIDFromRange(entityID uint64) int {
 			if entityID >= numKeysLowerLimit && entityID <= numKeysUpperLimit {
 				return int(numKeysLowerLimit)
 			}
-		} else {
-			// Single Entity
-			entID, _ := strconv.Atoi(entityIDStr)
-			if uint64(entID) == entityID {
-				return int(entityID)
-			}
 		}
 	}
 	return -1
@@ -106,30 +158,16 @@ func (l *LevelJSONConfig) GetFirstEntityIDFromRange(entityID uint64) int {
 
 func CreateEntityComponent(pLvlConfig *LevelJSONConfig) *orderedmap.OrderedMap {
 	lvlConfig := *pLvlConfig
-	pEntitiesConfig := lvlConfig.EntitiesDescriptions
-	entitiesConfig := *pEntitiesConfig
-
+	entitiesConfig := lvlConfig.EntitiesDescriptionsOrdered
 	entityComponentMap := orderedmap.NewOrderedMap()
 
-	for key, _ := range entitiesConfig {
-		var numKeysUpperLimit uint64
-		var numKeysLowerLimit uint64
+	for el := entitiesConfig.Front(); el != nil; el = el.Next() {
+		currentEntityID := el.Key.(uint64)
+		entityJSONConfig := el.Value.(*EntityJSONConfig)
 
-		if strings.Contains(key, "-") {
-			// We have a range of Entities
-			numKeys := strings.Split(key, "-")
-			numKeysUpperLimit, _ = strconv.ParseUint(numKeys[1], 10, 64)
-			numKeysLowerLimit, _ = strconv.ParseUint(numKeys[0], 10, 64)
-
-			for i := numKeysLowerLimit; i <= numKeysUpperLimit; i++ {
-				entityComponentMap.Set(i, entitiesConfig[key].Components)
-			}
-		} else {
-			// Single Entity
-			entityID, _ := strconv.Atoi(key)
-			entityComponentMap.Set(uint64(entityID), entitiesConfig[key].Components)
-		}
+		entityComponentMap.Set(currentEntityID, (*entityJSONConfig).Components)
 	}
+
 	return entityComponentMap
 }
 
@@ -149,30 +187,18 @@ func LoadImagesAndTextures(Game *Game) {
 	pLvlConfig := Game.LvlDescription
 	pAssetDescriptions := Game.AssetDescriptions
 
-	for key, EntityDescription := range *pLvlConfig.EntitiesDescriptions {
-		entityIDStr := key
+	for el := pLvlConfig.EntitiesDescriptionsOrdered.Front(); el != nil; el = el.Next() {
+		currentEntityID := el.Key.(uint64)
+		entityJSONConfig := el.Value.(*EntityJSONConfig)
 
-		var numKeysUpperLimit uint64
-		var numKeysLowerLimit uint64
+		entityIDStr := strconv.Itoa(int(currentEntityID))
 
-		if strings.Contains(entityIDStr, "-") {
-			numKeys := strings.Split(entityIDStr, "-")
-			numKeysUpperLimit, _ = strconv.ParseUint(numKeys[1], 10, 64)
-			numKeysLowerLimit, _ = strconv.ParseUint(numKeys[0], 10, 64)
-
-			for i := numKeysLowerLimit; i <= numKeysUpperLimit; i++ {
-				entityIDStr = strconv.Itoa(int(i))
-				connectStillImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
-				connectAnimatedImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
-				connectTextDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
-			}
-		} else {
-			connectStillImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
-			connectAnimatedImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
-			connectTextDataWithRenderAndAnimateComponentData(Game, entityIDStr, EntityDescription, pAssetDescriptions)
-		}
+		connectStillImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, entityJSONConfig, pAssetDescriptions)
+		connectAnimatedImageDataWithRenderAndAnimateComponentData(Game, entityIDStr, entityJSONConfig, pAssetDescriptions)
+		connectTextDataWithRenderAndAnimateComponentData(Game, entityIDStr, entityJSONConfig, pAssetDescriptions)
 	}
 }
+
 
 func connectAnimatedImageDataWithRenderAndAnimateComponentData(game *Game, entityIDStr string, entityDescription *EntityJSONConfig, assetDescriptions *map[string]*AssetJSONConfig) {
 	entityManager := game.ECSManager
@@ -319,7 +345,7 @@ func connectAnimatedImageDataWithRenderAndAnimateComponentUnwrapImageRange(fullI
 			}
 		}
 	}
-    return imagePathsWhenRange, len(imagePathsWhenRange) > 1
+	return imagePathsWhenRange, len(imagePathsWhenRange) > 1
 }
 
 func connectStillImageDataWithRenderAndAnimateComponentData(game *Game, entityIDStr string, entityDescription *EntityJSONConfig, assetDescriptions *map[string]*AssetJSONConfig) {

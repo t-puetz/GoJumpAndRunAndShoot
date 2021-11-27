@@ -1,4 +1,12 @@
 {
+
+  "Level One Background": {
+    "AnimatedByDefault": false,
+    "ImagesBasePath": "./assets/",
+    "Image": "Full-Background.png",
+    "Text": ""
+  },
+
   "Welcome Screen Background": {
     "AnimatedByDefault": false,
     "ImagesBasePath": "./assets/",

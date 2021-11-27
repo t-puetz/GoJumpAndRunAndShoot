@@ -168,9 +168,9 @@ func (e *ECSManager) InitializeComponentsForEntity(entityID uint64) {
 	componentNameToIDMap := e.ComponentIDStorage.ComponentNameToIDMap
 	entityToComponentMapOrdered := *e.EntityToComponentMap
 	CURRENT_MAX_COMPONENTS := len(*componentNameToIDMap)
-	componentMap, _ := entityToComponentMapOrdered.Get(entityID)
-
-	if componentMap == nil {
+	//componentMap, _ := entityToComponentMapOrdered.Get(entityID)
+    //TODO: ALLOW OVERWRITE OF MAP SO SAME ENTITYID OF ANOTHER LEVEL WILL NOT CARRY COMPONENTS OF PREDECESSOR ENTITY!
+	//if componentMap == nil {
 		// This is the first time we add a Component to the Entity since length
 		// of the value component slice is 0
 		entityToComponentMapOrdered.Set(entityID, make([]uint16, CURRENT_MAX_COMPONENTS, CURRENT_MAX_COMPONENTS))
@@ -180,7 +180,7 @@ func (e *ECSManager) InitializeComponentsForEntity(entityID uint64) {
 			thisComponentMap, _ := entityToComponentMapOrdered.Get(entityID)
 			thisComponentMap.([]uint16)[i] = 65535
 		}
-	}
+	//}
 }
 
 func (e *ECSManager) AddComponentToEntity(entityID uint64, componentID uint16) {
@@ -194,6 +194,7 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 	entityToComponentMap := *e.EntityToComponentMap
 
 	curNumEntities := uint64(entityToComponentMap.Len())
+//	log.Println(curNumEntities)
 
 	for i := uint64(0); i < curNumEntities; i++ {
 		entityIDStr := strconv.Itoa(int(i))
