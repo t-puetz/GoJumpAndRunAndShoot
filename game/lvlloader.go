@@ -463,11 +463,11 @@ func TransformSystemSetInitialVals(g *Game) {
 		if entityJSONConfig.SpreadAlong == "X" {
 			pRCD := g.ECSManager.GetComponentDataByName(el.Key.(uint64), "RENDER_COMPONENT").(*ecs.RenderComponentData)
 			firstEntity := lvlConfig.GetFirstEntityIDFromRange(el.Key.(uint64))
-			pTCD.Posy = float64(entityJSONConfig.InitialPosY)
-			pTCD.Posx = float64(entityJSONConfig.InitialPosX) + float64(pRCD.Image.W)*(float64(el.Key.(uint64))-float64(firstEntity))
+			pTCD.PosY = float64(entityJSONConfig.InitialPosY)
+			pTCD.PosX = float64(entityJSONConfig.InitialPosX) + float64(pRCD.Image.W)*(float64(el.Key.(uint64))-float64(firstEntity))
 		} else {
-			pTCD.Posx = float64(entityJSONConfig.InitialPosX)
-			pTCD.Posy = float64(entityJSONConfig.InitialPosY)
+			pTCD.PosX = float64(entityJSONConfig.InitialPosX)
+			pTCD.PosY = float64(entityJSONConfig.InitialPosY)
 		}
 
 		pTCD.FlipImg = false

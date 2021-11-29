@@ -94,10 +94,10 @@ func (sys *CollideSystem) CollideSystemCoreDetectAABB(ecsManager *ECSManager, en
 	pCCD1.CollisionDirection["left"] = imgRectOne.X < imgRectTwo.X+imgRectTwo.W && (pTCD1.Hspeed < 0 || pTCD2.Hspeed > 0) && int32(pTCD1.LastPosX) > imgRectTwo.W + int32(pTCD2.LastPosX)
 
 	// Ent1's top edge hits ent2's bottom edge. (e.g. Head hits bottom)
-	pCCD1.CollisionDirection["top"] = imgRectOne.Y < imgRectTwo.Y+imgRectTwo.H && (pTCD1.Vspeed > 0 || pTCD2.Vspeed < 0)
+	pCCD1.CollisionDirection["top"] = imgRectOne.Y < imgRectTwo.Y+imgRectTwo.H && (pTCD1.Vspeed > 0 || pTCD2.Vspeed < 0) && int32(pTCD1.LastPosY) - imgRectOne.H > int32(pTCD2.LastPosY)
 
 	// Ent1's bottom edge hits ent2's top edge. (e.g. Feet hit ground)
-	pCCD1.CollisionDirection["bottom"] = imgRectOne.Y+imgRectOne.H > imgRectTwo.Y && (pTCD1.Vspeed < 0 || pTCD2.Vspeed > 0)
+	pCCD1.CollisionDirection["bottom"] = imgRectOne.Y+imgRectOne.H > imgRectTwo.Y && (pTCD1.Vspeed < 0 || pTCD2.Vspeed > 0) && int32(pTCD1.LastPosY) > imgRectTwo.H - int32(pTCD2.LastPosY)
 
 	return true
 }
@@ -114,21 +114,21 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 
 	if entityOneHasDynamicComponent {
 		if pCCD1.CollisionDirection["right"] {
-			pTCD1.Posx -= float64(pCCD1.IntersectRect.W)
+			pTCD1.PosX -= float64(pCCD1.IntersectRect.W)
 			pTCD1.IsNotMoving = true
 			pTCD1.IsJumping = false
 		} else if pCCD1.CollisionDirection["left"] {
-			pTCD1.Posx += float64(pCCD1.IntersectRect.W)
+			pTCD1.PosX += float64(pCCD1.IntersectRect.W)
 			pTCD1.IsNotMoving = true
 			pTCD1.IsJumping = false
 		}
 
 		if pCCD1.CollisionDirection["bottom"] {
-			pTCD1.Posy -= float64(pCCD1.IntersectRect.H)
+			pTCD1.PosY -= float64(pCCD1.IntersectRect.H)
 			pTCD1.Vspeed = 0
 			pTCD1.IsJumping = false
 		} else if pCCD1.CollisionDirection["top"] {
-			pTCD1.Posy += float64(pCCD1.IntersectRect.H)
+			pTCD1.PosY += float64(pCCD1.IntersectRect.H)
 			pTCD1.IsJumping = true
 			pTCD1.Vspeed = 0
 		}
@@ -136,21 +136,23 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 
 	if entityTwoHasDynamicComponent {
 		if pCCD1.CollisionDirection["right"] {
-			pTCD2.Posx += float64(pCCD2.IntersectRect.W)
+			pTCD2.PosX += float64(pCCD2.IntersectRect.W)
 			pTCD2.IsNotMoving = true
 			pTCD2.IsJumping = false
 		} else if pCCD1.CollisionDirection["left"]  {
-			pTCD2.Posx -= float64(pCCD2.IntersectRect.W)
+			pTCD2.PosX -= float64(pCCD2.IntersectRect.W)
 			pTCD2.IsNotMoving = true
 			pTCD2.IsJumping = false
 		}
 
 		if pCCD1.CollisionDirection["bottom"] {
-			pTCD2.Posy += float64(pCCD2.IntersectRect.H)
+			//pTCD2.PosY += float64(pCCD2.IntersectRect.H)
+			pTCD2.PosY -= pTCD2.DY - delta
 			pTCD2.Vspeed = 0
 			pTCD2.IsJumping = false
 		} else if pCCD1.CollisionDirection["top"] {
-			pTCD2.Posy -= float64(pCCD2.IntersectRect.H)
+			//pTCD2.PosY -= float64(pCCD2.IntersectRect.H)
+			pTCD2.PosY -= pTCD2.DY - delta
 			pTCD2.IsJumping = true
 			pTCD2.Vspeed = 0
 		}

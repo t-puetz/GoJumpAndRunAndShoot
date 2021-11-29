@@ -257,7 +257,7 @@ func (e *ECSManager) GetEntityRect(entityID uint64) *sdl.Rect {
 	h := pRCD.Image.H
 	w := pRCD.Image.W
 
-	return &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: w, H: h}
+	return &sdl.Rect{X: int32(pTCD.PosX), Y: int32(pTCD.PosY), W: w, H: h}
 }
 
 // Systems

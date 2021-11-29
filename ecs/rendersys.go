@@ -70,7 +70,7 @@ func (sys *RenderSystem) UpdateComponent(delta float64, essentialData ...interfa
 		img = pRCD.Image
 		h = img.H
 		w = img.W
-		dstRect = &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: w, H: h}
+		dstRect = &sdl.Rect{X: int32(pTCD.PosX), Y: int32(pTCD.PosY), W: w, H: h}
 
 		if pTCD.FlipImg {
 			sdlFlip = sdl.FLIP_HORIZONTAL
@@ -78,7 +78,7 @@ func (sys *RenderSystem) UpdateComponent(delta float64, essentialData ...interfa
 			sdlFlip = sdl.FLIP_NONE
 		}
 	} else if renderText {
-		dstRect = &sdl.Rect{X: int32(pTCD.Posx), Y: int32(pTCD.Posy), W: 125, H: 25}
+		dstRect = &sdl.Rect{X: int32(pTCD.PosX), Y: int32(pTCD.PosY), W: 125, H: 25}
 	} else {
 		return
 	}

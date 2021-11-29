@@ -82,5 +82,11 @@
     "AnimatedByDefault": false,
     "ImagesBasePath": "./assets/Tiles/",
     "Image": "box.png"
+  },
+
+  "GrassHalf": {
+    "AnimatedByDefault": false,
+    "ImagesBasePath": "./assets/Tiles/",
+    "Image": "grassHalf.png"
   }
 }
