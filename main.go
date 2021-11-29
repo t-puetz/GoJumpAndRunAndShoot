@@ -1,8 +1,8 @@
 package main
 
 import (
-	"codeberg.org/alluneedistux/GoJumpRunShoot/game"
-	"codeberg.org/alluneedistux/GoJumpRunShoot/input"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/game"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/input"
 	_ "image/png"
 )
 

@@ -1,4 +1,4 @@
-module codeberg.org/alluneedistux/GoJumpRunShoot
+module github.com/t-puetz/GoJumpAndRunAndShoot
 
 go 1.17
 

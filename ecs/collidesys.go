@@ -1,7 +1,7 @@
 package ecs
 
 import (
-	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -88,10 +88,10 @@ func (sys *CollideSystem) CollideSystemCoreDetectAABB(ecsManager *ECSManager, en
 	pCCD2.IntersectRect = &collideRect
 
 	// Ent1 comes from left and hits left side of ent2. Facing does not matter.
-	pCCD1.CollisionDirection["right"] = imgRectOne.X+imgRectOne.W > imgRectTwo.X && (pTCD1.Hspeed > 0 || pTCD2.Hspeed < 0)
+	pCCD1.CollisionDirection["right"] = imgRectOne.X+imgRectOne.W > imgRectTwo.X && (pTCD1.Hspeed > 0 || pTCD2.Hspeed < 0) && int32(pTCD1.LastPosX) + imgRectOne.W < int32(pTCD2.LastPosX)
 
 	// Ent1 comes from right and hits right side of ent2. Facing does not matter.
-	pCCD1.CollisionDirection["left"] = imgRectOne.X < imgRectTwo.X+imgRectTwo.W && (pTCD1.Hspeed < 0 || pTCD2.Hspeed > 0)
+	pCCD1.CollisionDirection["left"] = imgRectOne.X < imgRectTwo.X+imgRectTwo.W && (pTCD1.Hspeed < 0 || pTCD2.Hspeed > 0) && int32(pTCD1.LastPosX) > imgRectTwo.W + int32(pTCD2.LastPosX)
 
 	// Ent1's top edge hits ent2's bottom edge. (e.g. Head hits bottom)
 	pCCD1.CollisionDirection["top"] = imgRectOne.Y < imgRectTwo.Y+imgRectTwo.H && (pTCD1.Vspeed > 0 || pTCD2.Vspeed < 0)

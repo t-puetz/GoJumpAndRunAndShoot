@@ -1,9 +1,9 @@
 package game
 
 import (
-	"codeberg.org/alluneedistux/GoJumpRunShoot/ecs"
-	"codeberg.org/alluneedistux/GoJumpRunShoot/input"
-	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/ecs"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/input"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 	"log"
@@ -30,7 +30,8 @@ func (g *Game) PrepareBasicGameData() {
 	g.ECSManager.Systems[2] = ecs.NewTransformSystem(g.ECSManager)
 	g.ECSManager.Systems[3] = ecs.NewCollideSystem(g.ECSManager)
 	g.ECSManager.Systems[4] = ecs.NewAnimateSystem(g.ECSManager)
-	g.ECSManager.Systems[5] = ecs.NewRenderSystem(g.ECSManager, g.Renderer)
+	g.ECSManager.Systems[5] = ecs.NewSideScrollSystem(g.ECSManager)
+	g.ECSManager.Systems[6] = ecs.NewRenderSystem(g.ECSManager, g.Renderer)
 
 	g.StateMachine = statemachine.NewStateMachine()
 }
@@ -79,8 +80,13 @@ func (g *Game) LoadWelcomeScreen() {
 }
 
 func (g *Game) RunSystems(delta float64) {
-	for _, system := range g.ECSManager.Systems {
-		system.Run(delta, g.StateMachine)
+	for i, system := range g.ECSManager.Systems {
+		if i != 6 {
+			system.Run(delta, g.StateMachine)
+		} else {
+			go system.Run(delta, g.StateMachine)
+		}
+
 	}
 }
 
@@ -94,7 +100,7 @@ func (g *Game) RunWelcomeScreen() {
 		g.runBasicQuitKeyboardEventLoop()
 
 		g.ECSManager.Systems[0].Run(1.0, g.StateMachine)
-		g.ECSManager.Systems[5].Run(1.0, g.StateMachine)
+		g.ECSManager.Systems[6].Run(1.0, g.StateMachine)
 
 		sdl.Delay(30)
 	}

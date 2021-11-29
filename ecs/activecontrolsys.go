@@ -1,8 +1,8 @@
 package ecs
 
 import (
-	"codeberg.org/alluneedistux/GoJumpRunShoot/input"
-	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/input"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
 )
 

@@ -1,7 +1,7 @@
 package ecs
 
 import (
-	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
 )
 

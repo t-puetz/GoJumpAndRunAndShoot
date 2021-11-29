@@ -1,15 +1,19 @@
 package ecs
 
-import "codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
+import (
+	"github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
+)
 
 type TransformComponentData struct {
-	Posx          float64
-	Posy          float64
-	FlipImg       bool
-	Hspeed        float64
-	Vspeed        float64
-	IsJumping     bool
-	IsNotMoving   bool
+	LastPosX                  float64
+	LastPosY                  float64
+	Posx                      float64
+	Posy                      float64
+	FlipImg                   bool
+	Hspeed                    float64
+	Vspeed                    float64
+	IsJumping                 bool
+	IsNotMoving               bool
 }
 
 type TransformSystem struct {
@@ -45,6 +49,8 @@ func (sys *TransformSystem) Run(delta float64, statemachine *statemachine.StateM
 
 func (sys *TransformSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
 	pTCD := essentialData[0].(*TransformComponentData)
+	pTCD.LastPosX = pTCD.Posx
+	pTCD.LastPosY = pTCD.Posy
 	pTCD.Posx += pTCD.Hspeed * delta
 	pTCD.Posy -= pTCD.Vspeed
 }

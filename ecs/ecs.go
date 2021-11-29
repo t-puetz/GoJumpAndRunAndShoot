@@ -1,8 +1,8 @@
 package ecs
 
 import (
-	"codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
 	"github.com/elliotchance/orderedmap"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
 	"github.com/veandco/go-sdl2/sdl"
 	"strconv"
 	"strings"
@@ -97,6 +97,8 @@ func NewComponentIDStorage() *ComponentIDStorage {
 	componentNameToIDMap["DYNAMIC_COMPONENT"] = 7
 	componentNameToIDMap["RENDER_COMPONENT"] = 8
 	componentNameToIDMap["ANIMATE_COMPONENT"] = 9
+	componentNameToIDMap["PASSIVE_CONTROL_COMPONENT_NPC"] = 10
+	componentNameToIDMap["SIDE_SCROLL_COMPONENT"] = 11
 
 	cmpIDVault := ComponentIDStorage{ComponentNameToIDMap: &componentNameToIDMap}
 
@@ -123,7 +125,7 @@ func NewECSManager() *ECSManager {
 		EntityComponentStringToComponentDataMap: &entityComponentStringToComponentDataMap,
 		ComponentIDStorage: NewComponentIDStorage(),
 		ComponentData: nil,
-		Systems: make([]System, 6, 8),
+		Systems: make([]System, 7, 8),
 	}
 
 	return &ecsManager
@@ -168,19 +170,14 @@ func (e *ECSManager) InitializeComponentsForEntity(entityID uint64) {
 	componentNameToIDMap := e.ComponentIDStorage.ComponentNameToIDMap
 	entityToComponentMapOrdered := *e.EntityToComponentMap
 	CURRENT_MAX_COMPONENTS := len(*componentNameToIDMap)
-	//componentMap, _ := entityToComponentMapOrdered.Get(entityID)
-    //TODO: ALLOW OVERWRITE OF MAP SO SAME ENTITYID OF ANOTHER LEVEL WILL NOT CARRY COMPONENTS OF PREDECESSOR ENTITY!
-	//if componentMap == nil {
-		// This is the first time we add a Component to the Entity since length
-		// of the value component slice is 0
-		entityToComponentMapOrdered.Set(entityID, make([]uint16, CURRENT_MAX_COMPONENTS, CURRENT_MAX_COMPONENTS))
-		// Only initialize components to "NULL" values once
-		for i := uint16(0); i < uint16(CURRENT_MAX_COMPONENTS); i++ {
-			// 65535 means NO COMPONENT, our artificial NULL VALUE for components
-			thisComponentMap, _ := entityToComponentMapOrdered.Get(entityID)
-			thisComponentMap.([]uint16)[i] = 65535
-		}
-	//}
+
+	entityToComponentMapOrdered.Set(entityID, make([]uint16, CURRENT_MAX_COMPONENTS, CURRENT_MAX_COMPONENTS))
+	// Only initialize components to "NULL" values
+	// 65535 means NO COMPONENT, our artificial NULL VALUE for components
+	for i := uint16(0); i < uint16(CURRENT_MAX_COMPONENTS); i++ {
+		thisComponentMap, _ := entityToComponentMapOrdered.Get(entityID)
+		thisComponentMap.([]uint16)[i] = 65535
+	}
 }
 
 func (e *ECSManager) AddComponentToEntity(entityID uint64, componentID uint16) {
@@ -194,7 +191,7 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 	entityToComponentMap := *e.EntityToComponentMap
 
 	curNumEntities := uint64(entityToComponentMap.Len())
-//	log.Println(curNumEntities)
+	var sideScrollCounterX float64
 
 	for i := uint64(0); i < curNumEntities; i++ {
 		entityIDStr := strconv.Itoa(int(i))
@@ -213,6 +210,7 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 
 			// Only link data if entityComponentMap map's val for that key is nil
 			// Also only link data if a real component exists.
+
 			if keyForEntityComponentDataMap != "-" && j != 65535 {
 				switch uint16(j) {
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["TRANSFORM_COMPONENT"]:
@@ -224,6 +222,8 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 					cd.Data = &AnimateComponentData{AnimationData: &acd}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["GRAVITY_COMPONENT"]:
 					cd.Data = &GravityComponentData{}
+				case (*e.ComponentIDStorage.ComponentNameToIDMap)["SIDE_SCROLL_COMPONENT"]:
+					cd.Data = &SideScrollComponentData{sidescrolled: &sideScrollCounterX, hspeed: 5.0}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["COLLIDE_COMPONENT"]:
 					collisionCoreData := &CollisionCoreData{}
 					collisionCoreData.CollisionDirection = make(map[string]bool)

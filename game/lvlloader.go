@@ -1,10 +1,10 @@
 package game
 
 import (
-	"codeberg.org/alluneedistux/GoJumpRunShoot/ecs"
 	"encoding/json"
 	"errors"
 	"github.com/elliotchance/orderedmap"
+	"github.com/t-puetz/GoJumpAndRunAndShoot/ecs"
 	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -173,11 +173,14 @@ func CreateEntityComponent(pLvlConfig *LevelJSONConfig) *orderedmap.OrderedMap {
 
 func CreateLvlsEntityAndComponents(Game *Game, EntCmpMap *orderedmap.OrderedMap) {
 	for el := EntCmpMap.Front(); el != nil; el = el.Next() {
-		{
-			Game.ECSManager.InitializeComponentsForEntity(el.Key.(uint64))
+		components := el.Value.([]uint16)
+		entityID := el.Key.(uint64)
 
-			for _, componentID := range el.Value.([]uint16) {
-				Game.ECSManager.AddComponentToEntity(el.Key.(uint64), componentID)
+		{
+			Game.ECSManager.InitializeComponentsForEntity(entityID)
+
+			for _, componentID := range components {
+				Game.ECSManager.AddComponentToEntity(entityID, componentID)
 			}
 		}
 	}
@@ -476,6 +479,8 @@ func TransformSystemSetInitialVals(g *Game) {
 
 func InitializeLevel(g *Game) {
 	entityComponentMap := CreateEntityComponent(g.LvlDescription)
+	g.ECSManager.EntityToComponentMap = nil
+	g.ECSManager.EntityToComponentMap = entityComponentMap
 	CreateLvlsEntityAndComponents(g, entityComponentMap)
 	g.ECSManager.LinkComponentsWithProperDataStruct()
 	LoadImagesAndTextures(g)

@@ -1,6 +1,6 @@
 package ecs
 
-import "codeberg.org/alluneedistux/GoJumpRunShoot/statemachine"
+import "github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
 
 type GravityComponentData struct {}
 
@@ -39,6 +39,8 @@ func (sys *GravitySystem) Run(delta float64, statemachine *statemachine.StateMac
 
 func (sys *GravitySystem) UpdateComponent(delta float64, essentialData ...interface{}) {
     pTCD := essentialData[0].(*TransformComponentData)
+
 	GRAVITY := essentialData[1].(float64)
 	pTCD.Vspeed -= GRAVITY
+
 }
