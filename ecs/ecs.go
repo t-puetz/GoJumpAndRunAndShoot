@@ -225,9 +225,10 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["SIDE_SCROLL_COMPONENT"]:
 					cd.Data = &SideScrollComponentData{sidescrolled: &sideScrollCounterX, hspeed: 5.0}
 				case (*e.ComponentIDStorage.ComponentNameToIDMap)["COLLIDE_COMPONENT"]:
-					collisionCoreData := &CollisionCoreData{}
-					collisionCoreData.CollisionDirection = make(map[string]bool)
-					cd.Data = &CollisionComponentData{collisionCoreData}
+					collisionCoreData := &CollisionCoreData{CollisionDirection: make(map[string]bool), LastCollisionDirection: make(map[string]bool)}
+					collisionCoreData.CollisionDirection["bottom"] = true
+					collisionCoreData.LastCollisionDirection["bottom"] = true
+					cd.Data = &CollisionComponentData{collisionCoreData }
 				}
 			}
 			entityComponentStringToComponentDataMap[keyForEntityComponentDataMap] = &cd

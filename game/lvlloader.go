@@ -19,8 +19,8 @@ import (
 type EntityJSONConfig struct {
 	Reference   string   `json:"Reference"`
 	Components  []uint16 `json:"Components"`
-	InitialPosX int      `json:"InitialPosX"`
-	InitialPosY int      `json:"InitialPosY"`
+	InitialPosX int32      `json:"InitialPosX"`
+	InitialPosY int32      `json:"InitialPosY"`
 	SpreadAlong string   `json:"SpreadAlong"`
 }
 
@@ -451,25 +451,31 @@ func TransformSystemSetInitialVals(g *Game) {
 	lvlConfig := g.LvlDescription
 
 	for el := g.ECSManager.EntityToComponentMap.Front(); el != nil; el = el.Next() {
-		hasTransformComponent := g.ECSManager.HasNamedComponent(el.Value.([]uint16), "TRANSFORM_COMPONENT")
+
+		entityID := el.Key.(uint64)
+		components := el.Value.([]uint16)
+
+		hasTransformComponent := g.ECSManager.HasNamedComponent(components, "TRANSFORM_COMPONENT")
 
 		if !hasTransformComponent {
 			continue
 		}
 
-		pTCD := g.ECSManager.GetComponentDataByName(el.Key.(uint64), "TRANSFORM_COMPONENT").(*ecs.TransformComponentData)
-		entityJSONConfig := lvlConfig.GetEntityDescription(el.Key.(uint64))
+		pTCD := g.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*ecs.TransformComponentData)
+		entityJSONConfig := lvlConfig.GetEntityDescription(entityID)
 
 		if entityJSONConfig.SpreadAlong == "X" {
-			pRCD := g.ECSManager.GetComponentDataByName(el.Key.(uint64), "RENDER_COMPONENT").(*ecs.RenderComponentData)
-			firstEntity := lvlConfig.GetFirstEntityIDFromRange(el.Key.(uint64))
-			pTCD.PosY = float64(entityJSONConfig.InitialPosY)
-			pTCD.PosX = float64(entityJSONConfig.InitialPosX) + float64(pRCD.Image.W)*(float64(el.Key.(uint64))-float64(firstEntity))
+			pRCD := g.ECSManager.GetComponentDataByName(entityID, "RENDER_COMPONENT").(*ecs.RenderComponentData)
+			firstEntity := lvlConfig.GetFirstEntityIDFromRange(entityID)
+			pTCD.PosY = entityJSONConfig.InitialPosY
+			pTCD.PosX = entityJSONConfig.InitialPosX + pRCD.Image.W*(int32(entityID)-int32(firstEntity))
 		} else {
-			pTCD.PosX = float64(entityJSONConfig.InitialPosX)
-			pTCD.PosY = float64(entityJSONConfig.InitialPosY)
+			pTCD.PosX = entityJSONConfig.InitialPosX
+			pTCD.PosY = entityJSONConfig.InitialPosY
 		}
 
+		pTCD.LastPosX = pTCD.PosX
+		pTCD.LastPosY = pTCD.PosY
 		pTCD.FlipImg = false
 		pTCD.IsJumping = false
 		pTCD.Hspeed = 0

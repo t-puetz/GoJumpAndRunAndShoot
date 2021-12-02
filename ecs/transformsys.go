@@ -2,20 +2,20 @@ package ecs
 
 import (
 	"github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
-	"log"
 	"math"
 )
 
 type TransformComponentData struct {
-	LastPosX    float64
-	LastPosY    float64
-	PosX        float64
-	PosY        float64
-	DX          float64
-	DY          float64
+	LastPosX    int32
+	LastPosY    int32
+	LastSpeed   int32
+	PosX        int32
+	PosY        int32
+	DX          int32
+	DY          int32
 	FlipImg     bool
-	Hspeed      float64
-	Vspeed      float64
+	Hspeed      int32
+	Vspeed      int32
 	IsJumping   bool
 	IsNotMoving bool
 }
@@ -38,10 +38,10 @@ func (sys *TransformSystem) Run(delta float64, statemachine *statemachine.StateM
 		entityID := el.Key.(uint64)
 		components := el.Value.([]uint16)
 
-		entiyHasDynamicComponent := ecsManager.HasNamedComponent(components, "DYNAMIC_COMPONENT")
-		entiyHasTransformComponent := ecsManager.HasNamedComponent(components, "TRANSFORM_COMPONENT")
+		entityHasDynamicComponent := ecsManager.HasNamedComponent(components, "DYNAMIC_COMPONENT")
+		entityHasTransformComponent := ecsManager.HasNamedComponent(components, "TRANSFORM_COMPONENT")
 
-		if !entiyHasDynamicComponent || !entiyHasTransformComponent {
+		if !entityHasDynamicComponent || !entityHasTransformComponent {
 			continue
 		}
 
@@ -55,9 +55,9 @@ func (sys *TransformSystem) UpdateComponent(delta float64, essentialData ...inte
 	pTCD := essentialData[0].(*TransformComponentData)
 	pTCD.LastPosX = pTCD.PosX
 	pTCD.LastPosY = pTCD.PosY
-	pTCD.PosX += pTCD.Hspeed * delta
+	pTCD.LastSpeed = pTCD.Hspeed
+	pTCD.PosX += int32(float64(pTCD.Hspeed) * delta)
 	pTCD.PosY -= pTCD.Vspeed
-	pTCD.DX = math.Abs(pTCD.LastPosX - pTCD.PosX)
-	pTCD.DY = math.Abs(pTCD.LastPosY - pTCD.PosY)
-	log.Println("DX: ", pTCD.DX)
+	pTCD.DX = int32(math.Abs(float64(pTCD.LastPosX - pTCD.PosX)))
+	pTCD.DY = int32(math.Abs(float64(pTCD.LastPosY - pTCD.PosY)))
 }

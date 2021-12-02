@@ -15,7 +15,7 @@ func NewGravitySystem(e *ECSManager) *GravitySystem {
 }
 
 func (sys *GravitySystem) Run(delta float64, statemachine *statemachine.StateMachine) {
-	const GRAVITY = 0.981
+	const GRAVITY = int32(1)
 	ecsManager := sys.ECSManager
 	entityToComponentMapOrdered := ecsManager.EntityToComponentMap
 
@@ -40,7 +40,7 @@ func (sys *GravitySystem) Run(delta float64, statemachine *statemachine.StateMac
 func (sys *GravitySystem) UpdateComponent(delta float64, essentialData ...interface{}) {
     pTCD := essentialData[0].(*TransformComponentData)
 
-	GRAVITY := essentialData[1].(float64)
+	GRAVITY := essentialData[1].(int32)
 	pTCD.Vspeed -= GRAVITY
 
 }

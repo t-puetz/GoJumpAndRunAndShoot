@@ -81,6 +81,10 @@ func (g *Game) LoadWelcomeScreen() {
 
 func (g *Game) RunSystems(delta float64) {
 	for i, system := range g.ECSManager.Systems {
+		if i == 5 {
+			continue
+		}
+
 		if i != 6 {
 			system.Run(delta, g.StateMachine)
 		} else {

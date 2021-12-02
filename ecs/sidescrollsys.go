@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"github.com/t-puetz/GoJumpAndRunAndShoot/statemachine"
-	"log"
 )
 
 type SideScrollComponentData struct {
@@ -35,7 +34,6 @@ func (sys *SideScrollSystem) UpdateComponent(delta float64, essentialData ...int
 		entityHasSideScrollComponent := ecsManager.HasNamedComponent(components, "SIDE_SCROLL_COMPONENT")
 
 		playersTransformComponentData := sys.ECSManager.GetComponentDataByName(1, "TRANSFORM_COMPONENT").(*TransformComponentData)
-		log.Println(playersTransformComponentData.PosX)
 
 		pTCD := sys.ECSManager.GetComponentDataByName(entityID, "TRANSFORM_COMPONENT").(*TransformComponentData)
 		pSCD := sys.GetComponentData(entityID).(*SideScrollComponentData)
@@ -47,7 +45,8 @@ func (sys *SideScrollSystem) UpdateComponent(delta float64, essentialData ...int
 		}
 
 		if playersTransformComponentData.PosX > 450 && !playersTransformComponentData.IsNotMoving {
-			pTCD.PosX -= pSCD.hspeed * delta
+			pTCD.Hspeed = 0
+			pTCD.PosX -= int32(pSCD.hspeed * delta)
 		}
 	}
 }
