@@ -8,10 +8,10 @@ import (
 )
 
 type CollisionCoreData struct {
-	CollisionDirection  map[string]bool
+	CollisionDirection     map[string]bool
 	LastCollisionDirection map[string]bool
-	IntersectRect       *sdl.Rect
-	EntityCollidingWith uint64
+	IntersectRect          *sdl.Rect
+	EntityCollidingWith    uint64
 }
 
 type CollisionComponentData struct {
@@ -33,10 +33,10 @@ func (sys *CollideSystem) Run(delta float64, statemachine *statemachine.StateMac
 	entityToComponentMapOrdered := ecsManager.EntityToComponentMap
 
 	for el := entityToComponentMapOrdered.Front(); el != nil; el = el.Next() {
-	    components := el.Value.([]uint16)
-	    entityID := el.Key.(uint64)
+		components := el.Value.([]uint16)
+		entityID := el.Key.(uint64)
 
-		if ! sys.ECSManager.HasNamedComponent(components, "DYNAMIC_COMPONENT") {
+		if !sys.ECSManager.HasNamedComponent(components, "DYNAMIC_COMPONENT") {
 			continue
 		}
 
@@ -46,7 +46,7 @@ func (sys *CollideSystem) Run(delta float64, statemachine *statemachine.StateMac
 		for j := entityID + 1; j < lengthOfEntityComponentMap; j++ {
 			componentsEntityTwo, _ := entityToComponentMapOrdered.Get(j)
 
-			if ! sys.ECSManager.HasNamedComponent(componentsEntityTwo.([]uint16),"COLLIDE_COMPONENT") {
+			if !sys.ECSManager.HasNamedComponent(componentsEntityTwo.([]uint16), "COLLIDE_COMPONENT") {
 				continue
 			}
 
@@ -66,8 +66,8 @@ func (sys *CollideSystem) Run(delta float64, statemachine *statemachine.StateMac
 			pCCD1 := sys.GetComponentData(ent1).(*CollisionComponentData)
 			pCCD2 := sys.GetComponentData(ent2).(*CollisionComponentData)
 
-			if math.Abs(float64(pTCD1.PosX - pTCD2.PosX)) > float64(pRCD1.Image.W / 2) && math.Abs(float64(pTCD1.PosY - pTCD2.PosY)) > float64(pRCD1.Image.H / 2) ||
-				math.Abs(float64(pTCD1.PosX - pTCD2.PosX)) > float64(pRCD2.Image.W / 2) && math.Abs(float64(pTCD1.PosY - pTCD2.PosY)) > float64(pRCD2.Image.H / 2) {
+			if math.Abs(float64(pTCD1.PosX-pTCD2.PosX)) > float64(pRCD1.Image.W/2) && math.Abs(float64(pTCD1.PosY-pTCD2.PosY)) > float64(pRCD1.Image.H/2) ||
+				math.Abs(float64(pTCD1.PosX-pTCD2.PosX)) > float64(pRCD2.Image.W/2) && math.Abs(float64(pTCD1.PosY-pTCD2.PosY)) > float64(pRCD2.Image.H/2) {
 
 				// Skip entities that are to far away from each other anyways
 				continue
@@ -137,7 +137,6 @@ func (sys *CollideSystem) detect(ecsManager *ECSManager, ent1, ent2 uint64, pTCD
 			pCCD1.CollisionDirection["bottom"] = false
 		}
 
-
 		log.Println(intersectRect, areColliding)
 		return &intersectRect, areColliding
 	}
@@ -148,7 +147,7 @@ func (sys *CollideSystem) detect(ecsManager *ECSManager, ent1, ent2 uint64, pTCD
 func (sys *CollideSystem) resolve(intersectRect *sdl.Rect, pTCD1, pTCD2 *TransformComponentData, entityOneHasDynamicComponent, entityTwoHasDynamicComponent bool, pCCD1, pCCD2 *CollisionComponentData) {
 	log.Println(pCCD1.CollisionDirection)
 	log.Println(pCCD2.CollisionDirection)
-    if entityOneHasDynamicComponent && pCCD1.CollisionDirection["right"] && !pCCD1.LastCollisionDirection["right"]  {
+	if entityOneHasDynamicComponent && pCCD1.CollisionDirection["right"] && !pCCD1.LastCollisionDirection["right"] {
 		pTCD1.PosX -= intersectRect.W
 		pTCD1.Hspeed = 0
 	}
@@ -165,12 +164,14 @@ func (sys *CollideSystem) resolve(intersectRect *sdl.Rect, pTCD1, pTCD2 *Transfo
 	}
 
 	if entityOneHasDynamicComponent && pCCD1.CollisionDirection["top"] {
+		pTCD1.IsJumping = false
+		pTCD1.Vspeed = 0
 		pTCD1.PosY += intersectRect.H
 	}
 
 }
 
-func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interface{}) {
+func (sys *CollideSystem) UpdateComponent(delta float64, essentialData ...interface{}) {
 
 	intersectRect := essentialData[0].(*sdl.Rect)
 	pTCD1 := essentialData[1].(*TransformComponentData)
@@ -180,6 +181,5 @@ func (sys *CollideSystem) UpdateComponent(delta float64, essentialData...interfa
 	pCCD1 := essentialData[5].(*CollisionComponentData)
 	pCCD2 := essentialData[6].(*CollisionComponentData)
 
-
-    sys.resolve(intersectRect, pTCD1, pTCD2, entityOneHasDynamicComponent, entityTwoHasDynamicComponent, pCCD1, pCCD2)
+	sys.resolve(intersectRect, pTCD1, pTCD2, entityOneHasDynamicComponent, entityTwoHasDynamicComponent, pCCD1, pCCD2)
 }
