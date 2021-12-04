@@ -80,12 +80,21 @@ import (
  Generics in upcoming go 1.18 might solve that and might also simplify the handling of systems etc.
 */
 
-type ComponentIDStorage struct {
-	// we can get CURRENT_MAX_COMPONENTS from len(componentNameToIDMap)
-	ComponentNameToIDMap *map[string]uint16
+type ComponentData struct {
+	Data interface{}
 }
 
-func NewComponentIDStorage() *ComponentIDStorage {
+type ECSManager struct {
+	EntityToComponentMap                    *orderedmap.OrderedMap
+	EntityComponentStringToComponentDataMap map[string]*ComponentData
+	ComponentIDStorage                      map[string]uint16
+	ComponentData                           *ComponentData
+	Systems                                 []System
+}
+
+func NewECSManager() *ECSManager {
+	entityComponentStringToComponentDataMap := make(map[string]*ComponentData)
+
 	componentNameToIDMap := make(map[string]uint16)
 	componentNameToIDMap["DUMMY_COMPONENT"] = 0 // Should never be used
 	componentNameToIDMap["REAL_COMPONENT"] = 1
@@ -100,32 +109,12 @@ func NewComponentIDStorage() *ComponentIDStorage {
 	componentNameToIDMap["PASSIVE_CONTROL_COMPONENT_NPC"] = 10
 	componentNameToIDMap["SIDE_SCROLL_COMPONENT"] = 11
 
-	cmpIDVault := ComponentIDStorage{ComponentNameToIDMap: &componentNameToIDMap}
-
-	return &cmpIDVault
-}
-
-type ComponentData struct {
-	Data interface{}
-}
-
-type ECSManager struct {
-	EntityToComponentMap                    *orderedmap.OrderedMap
-	EntityComponentStringToComponentDataMap *map[string]*ComponentData
-	ComponentIDStorage                      *ComponentIDStorage
-	ComponentData                           *ComponentData
-	Systems									[]System
-}
-
-func NewECSManager() *ECSManager {
-	entityComponentStringToComponentDataMap := make(map[string]*ComponentData)
-
-	ecsManager := ECSManager {
-		EntityToComponentMap: orderedmap.NewOrderedMap(),
-		EntityComponentStringToComponentDataMap: &entityComponentStringToComponentDataMap,
-		ComponentIDStorage: NewComponentIDStorage(),
-		ComponentData: nil,
-		Systems: make([]System, 7, 8),
+	ecsManager := ECSManager{
+		EntityToComponentMap:                    orderedmap.NewOrderedMap(),
+		EntityComponentStringToComponentDataMap: entityComponentStringToComponentDataMap,
+		ComponentIDStorage:                      componentNameToIDMap,
+		ComponentData:                           nil,
+		Systems:                                 make([]System, 7, 8),
 	}
 
 	return &ecsManager
@@ -141,7 +130,7 @@ func (e *ECSManager) GetComponentDataByID(entityID uint64, componentID uint16) i
 	entityComponentStringToComponentDataMap := e.EntityComponentStringToComponentDataMap
 
 	componentKey := entIDStr + "-" + cmpIDStr
-	return (*entityComponentStringToComponentDataMap)[componentKey].Data
+	return entityComponentStringToComponentDataMap[componentKey].Data
 }
 
 func (e *ECSManager) GetComponentDataByName(entityID uint64, componentName string) interface{} {
@@ -149,8 +138,7 @@ func (e *ECSManager) GetComponentDataByName(entityID uint64, componentName strin
 }
 
 func (e *ECSManager) GetComponentID(componentName string) uint16 {
-	componentNameToIDMap := e.ComponentIDStorage.ComponentNameToIDMap
-	return (*componentNameToIDMap)[componentName]
+	return e.ComponentIDStorage[componentName]
 }
 
 func (e *ECSManager) GetComponentIDAsStr(componentName string) string {
@@ -161,15 +149,13 @@ func (e *ECSManager) GetEntityComponentKey(entityID uint64, componentName string
 	return strconv.Itoa(int(entityID)) + "-" + e.GetComponentIDAsStr(componentName)
 }
 
-
 func (e *ECSManager) HasNamedComponent(components []uint16, componentName string) bool {
 	return e.HasComponent(components, e.GetComponentID(componentName))
 }
 
 func (e *ECSManager) InitializeComponentsForEntity(entityID uint64) {
-	componentNameToIDMap := e.ComponentIDStorage.ComponentNameToIDMap
 	entityToComponentMapOrdered := *e.EntityToComponentMap
-	CURRENT_MAX_COMPONENTS := len(*componentNameToIDMap)
+	CURRENT_MAX_COMPONENTS := len(e.ComponentIDStorage)
 
 	entityToComponentMapOrdered.Set(entityID, make([]uint16, CURRENT_MAX_COMPONENTS, CURRENT_MAX_COMPONENTS))
 	// Only initialize components to "NULL" values
@@ -187,7 +173,7 @@ func (e *ECSManager) AddComponentToEntity(entityID uint64, componentID uint16) {
 }
 
 func (e *ECSManager) LinkComponentsWithProperDataStruct() {
-	entityComponentStringToComponentDataMap := *e.EntityComponentStringToComponentDataMap
+	entityComponentStringToComponentDataMap := e.EntityComponentStringToComponentDataMap
 	entityToComponentMap := *e.EntityToComponentMap
 
 	curNumEntities := uint64(entityToComponentMap.Len())
@@ -213,22 +199,22 @@ func (e *ECSManager) LinkComponentsWithProperDataStruct() {
 
 			if keyForEntityComponentDataMap != "-" && j != 65535 {
 				switch uint16(j) {
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["TRANSFORM_COMPONENT"]:
+				case e.ComponentIDStorage["TRANSFORM_COMPONENT"]:
 					cd.Data = &TransformComponentData{}
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["RENDER_COMPONENT"]:
+				case e.ComponentIDStorage["RENDER_COMPONENT"]:
 					cd.Data = &RenderComponentData{}
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["ANIMATE_COMPONENT"]:
+				case e.ComponentIDStorage["ANIMATE_COMPONENT"]:
 					acd := make(map[string]*AnimationComponentDataCore)
 					cd.Data = &AnimateComponentData{AnimationData: &acd}
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["GRAVITY_COMPONENT"]:
+				case e.ComponentIDStorage["GRAVITY_COMPONENT"]:
 					cd.Data = &GravityComponentData{}
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["SIDE_SCROLL_COMPONENT"]:
+				case e.ComponentIDStorage["SIDE_SCROLL_COMPONENT"]:
 					cd.Data = &SideScrollComponentData{sidescrolled: &sideScrollCounterX, hspeed: 5.0}
-				case (*e.ComponentIDStorage.ComponentNameToIDMap)["COLLIDE_COMPONENT"]:
+				case e.ComponentIDStorage["COLLIDE_COMPONENT"]:
 					collisionCoreData := &CollisionCoreData{CollisionDirection: make(map[string]bool), LastCollisionDirection: make(map[string]bool)}
 					collisionCoreData.CollisionDirection["bottom"] = true
 					collisionCoreData.LastCollisionDirection["bottom"] = true
-					cd.Data = &CollisionComponentData{collisionCoreData }
+					cd.Data = &CollisionComponentData{collisionCoreData}
 				}
 			}
 			entityComponentStringToComponentDataMap[keyForEntityComponentDataMap] = &cd
